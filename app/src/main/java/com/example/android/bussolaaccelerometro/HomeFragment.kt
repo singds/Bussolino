@@ -11,6 +11,7 @@ import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.TextView
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.viewModels
@@ -21,7 +22,6 @@ class HomeFragment : Fragment(),
     private val viewModel by viewModels<HomeViewModel>()
     private lateinit var sensorManager: SensorManager
     private lateinit var accelerometro: Sensor
-
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -40,7 +40,16 @@ class HomeFragment : Fragment(),
         savedInstanceState: Bundle?
     ): View? {
         // Inflate the layout for this fragment
-        return inflater.inflate(R.layout.fragment_home, container, false)
+        val view = inflater.inflate(R.layout.fragment_home, container, false)
+        val vaccX = view.findViewById<TextView>(R.id.accX)
+        val vaccY = view.findViewById<TextView>(R.id.accY)
+        val vaccZ = view.findViewById<TextView>(R.id.accZ)
+
+        viewModel.accelX.observe(viewLifecycleOwner, { value -> vaccX.text = "%.2f".format(value)})
+        viewModel.accelY.observe(viewLifecycleOwner, { value -> vaccY.text = "%.2f".format(value)})
+        viewModel.accelZ.observe(viewLifecycleOwner, { value -> vaccZ.text = "%.2f".format(value)})
+
+        return view
     }
 
     override fun onResume() {
