@@ -22,12 +22,13 @@ class HomeFragment : Fragment(),
     private val viewModel by viewModels<HomeViewModel>()
     private lateinit var sensorManager: SensorManager
     private lateinit var accelerometro: Sensor
+    private lateinit var magnetometro: Sensor
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
         sensorManager = context?.getSystemService(AppCompatActivity.SENSOR_SERVICE) as SensorManager
         accelerometro = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER)
+        magnetometro = sensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD)
 
         val sensors = sensorManager.getSensorList(Sensor.TYPE_ALL)
         for (sensor in sensors) {
@@ -40,25 +41,34 @@ class HomeFragment : Fragment(),
         savedInstanceState: Bundle?
     ): View? {
         // Inflate the layout for this fragment
-        val view = inflater.inflate(R.layout.fragment_home, container, false)
+        return inflater.inflate(R.layout.fragment_home, container, false)
+    }
+
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+        
         val vaccX = view.findViewById<TextView>(R.id.accX)
         val vaccY = view.findViewById<TextView>(R.id.accY)
         val vaccZ = view.findViewById<TextView>(R.id.accZ)
+        val vgradiNord = view.findViewById<TextView>(R.id.gradiNord)
 
         viewModel.accelX.observe(viewLifecycleOwner, { value -> vaccX.text = "%.2f".format(value)})
         viewModel.accelY.observe(viewLifecycleOwner, { value -> vaccY.text = "%.2f".format(value)})
         viewModel.accelZ.observe(viewLifecycleOwner, { value -> vaccZ.text = "%.2f".format(value)})
-
-        return view
+        viewModel.gradiNord.observe(viewLifecycleOwner, { value ->
+            vgradiNord.text = "%.2f".format(value)
+        })
     }
 
     override fun onResume() {
         super.onResume()
         sensorManager.registerListener(this, accelerometro, SensorManager.SENSOR_DELAY_NORMAL)
+        sensorManager.registerListener(this, magnetometro, SensorManager.SENSOR_DELAY_NORMAL)
     }
 
     override fun onPause() {
         super.onPause()
+        // Unregisters a listener for all sensors.
         sensorManager.unregisterListener(this)
     }
 
