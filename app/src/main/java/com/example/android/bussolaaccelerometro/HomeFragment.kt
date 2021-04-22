@@ -11,6 +11,7 @@ import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.ImageView
 import android.widget.TextView
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
@@ -51,19 +52,21 @@ class HomeFragment : Fragment(),
         val vaccY = view.findViewById<TextView>(R.id.accY)
         val vaccZ = view.findViewById<TextView>(R.id.accZ)
         val vgradiNord = view.findViewById<TextView>(R.id.gradiNord)
+        val bussola = view.findViewById<ImageView>(R.id.bussola)
 
         viewModel.accelX.observe(viewLifecycleOwner, { value -> vaccX.text = "%.2f".format(value)})
         viewModel.accelY.observe(viewLifecycleOwner, { value -> vaccY.text = "%.2f".format(value)})
         viewModel.accelZ.observe(viewLifecycleOwner, { value -> vaccZ.text = "%.2f".format(value)})
         viewModel.gradiNord.observe(viewLifecycleOwner, { value ->
             vgradiNord.text = "%.2f".format(value)
+            bussola.rotation = -value
         })
     }
 
     override fun onResume() {
         super.onResume()
-        sensorManager.registerListener(this, accelerometro, SensorManager.SENSOR_DELAY_NORMAL)
-        sensorManager.registerListener(this, magnetometro, SensorManager.SENSOR_DELAY_NORMAL)
+        sensorManager.registerListener(this, accelerometro, SensorManager.SENSOR_DELAY_GAME)
+        sensorManager.registerListener(this, magnetometro, SensorManager.SENSOR_DELAY_GAME)
     }
 
     override fun onPause() {
