@@ -34,7 +34,6 @@ class HomeViewModel: ViewModel() {
 
 
     fun onSensorChanged(event: SensorEvent) {
-        Log.d ("MYTAG", "event [${event.sensor.name}}")
         if (event.sensor.type == Sensor.TYPE_ACCELEROMETER) {
             lastAccel[0] = filtroAccel (lastAccel[0], event.values[0])
             lastAccel[1] = filtroAccel (lastAccel[1], event.values[1])
