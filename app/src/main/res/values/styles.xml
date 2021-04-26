@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <style name="txtAccel">
+        <item name="android:fontFamily">@font/roboto</item>
+        <item name="android:textSize">25sp</item>
+    </style>
+</resources>

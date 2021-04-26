@@ -1,5 +1,9 @@
 <resources>
     <string name="app_name">BussolaAccelerometro</string>
-    <!-- TODO: Remove or change this placeholder text -->
-    <string name="hello_blank_fragment">Hello blank fragment</string>
+    <string name="notif_ch_main">Canale principale</string>
+    <string name="notif_ch_main_description">Tutte le notifiche</string>
+    <string name="udm_ms2">m/s2</string>
+    <string name="accel_x">Accelerazione x:</string>
+    <string name="accel_y">Accelerazione y:</string>
+    <string name="accel_z">Accelerazione z:</string>
 </resources>

@@ -5,7 +5,6 @@ import android.hardware.SensorEvent
 import android.hardware.SensorEventListener
 import android.hardware.SensorManager
 import android.os.Bundle
-import android.util.EventLog
 import android.util.Log
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
@@ -13,29 +12,12 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.TextView
-import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.viewModels
 
-class HomeFragment : Fragment(),
-    SensorEventListener
+class HomeFragment : Fragment()
 {
     private val viewModel by viewModels<HomeViewModel>()
-    private lateinit var sensorManager: SensorManager
-    private lateinit var accelerometro: Sensor
-    private lateinit var magnetometro: Sensor
-
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        sensorManager = context?.getSystemService(AppCompatActivity.SENSOR_SERVICE) as SensorManager
-        accelerometro = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER)
-        magnetometro = sensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD)
-
-        val sensors = sensorManager.getSensorList(Sensor.TYPE_ALL)
-        for (sensor in sensors) {
-            Log.d("MYLOG", "${sensor.name} [${sensor.stringType}]")
-        }
-    }
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -58,32 +40,8 @@ class HomeFragment : Fragment(),
         viewModel.accelY.observe(viewLifecycleOwner, { value -> vaccY.text = "%.2f".format(value)})
         viewModel.accelZ.observe(viewLifecycleOwner, { value -> vaccZ.text = "%.2f".format(value)})
         viewModel.gradiNord.observe(viewLifecycleOwner, { value ->
-            vgradiNord.text = "%.2f".format(value)
-            bussola.rotation = -value
+            vgradiNord.text = "%d °".format(value)
+            bussola.rotation = -value.toFloat()
         })
-    }
-
-    override fun onResume() {
-        super.onResume()
-        sensorManager.registerListener(this, accelerometro, SensorManager.SENSOR_DELAY_GAME)
-        sensorManager.registerListener(this, magnetometro, SensorManager.SENSOR_DELAY_GAME)
-    }
-
-    override fun onPause() {
-        super.onPause()
-        // Unregisters a listener for all sensors.
-        sensorManager.unregisterListener(this)
-    }
-
-    override fun onSensorChanged(event: SensorEvent?) {
-        event?.let {
-            viewModel.onSensorChanged (it)
-        }
-    }
-
-    override fun onAccuracyChanged(sensor: Sensor?, accuracy: Int) {
-        sensor?.let {
-            viewModel.onAccuracyChanged(it, accuracy)
-        }
     }
 }
