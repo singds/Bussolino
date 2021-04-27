@@ -3,46 +3,43 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="wrap_content">
+    android:layout_height="wrap_content"
+    tools:showIn="@layout/fragment_home">
 
     <androidx.cardview.widget.CardView
+        android:id="@+id/boxBussola"
         android:layout_width="match_parent"
-        android:layout_height="70dp"
+        android:layout_height="wrap_content"
         android:layout_margin="@dimen/cardMargin">
 
         <androidx.constraintlayout.widget.ConstraintLayout
             android:layout_width="match_parent"
             android:layout_height="match_parent">
 
+            <ImageView
+                android:id="@+id/bussola"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="20dp"
+                android:layout_marginBottom="20dp"
+                android:src="@drawable/ic_bussola"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
+
             <TextView
-                android:id="@+id/accValue"
+                android:id="@+id/gradiNord"
                 style="@style/txtAccel"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginEnd="52dp"
+                android:layout_marginEnd="16dp"
+                android:layout_marginBottom="20dp"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintTop_toTopOf="parent"
-                app:layout_constraintVertical_bias="0.529"
-                tools:text="9.81" />
-
-            <TextView
-                android:id="@+id/accLabel"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="20dp"
-                app:layout_constraintBaseline_toBaselineOf="@+id/accValue"
-                app:layout_constraintStart_toStartOf="parent"
-                tools:text="@string/accel_x" />
-
-            <TextView
-                android:id="@+id/accUdm"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="5dp"
-                android:text="@string/udm_ms2"
-                app:layout_constraintBaseline_toBaselineOf="@+id/accValue"
-                app:layout_constraintStart_toEndOf="@+id/accValue" />
+                tools:text="150°" />
         </androidx.constraintlayout.widget.ConstraintLayout>
+
     </androidx.cardview.widget.CardView>
+
 </FrameLayout>
