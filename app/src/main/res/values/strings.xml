@@ -6,4 +6,5 @@
     <string name="accel_x">Accelerazione x:</string>
     <string name="accel_y">Accelerazione y:</string>
     <string name="accel_z">Accelerazione z:</string>
+    <string name="abilita_reg">Registrazione in background</string>
 </resources>

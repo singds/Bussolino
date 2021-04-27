@@ -12,4 +12,6 @@ object Database
     val fastAccX = MutableLiveData<Float>()
     val fastAccY = MutableLiveData<Float>()
     val fastAccZ = MutableLiveData<Float>()
+
+    val enableRecordInBackground = MutableLiveData<Boolean>()
 }

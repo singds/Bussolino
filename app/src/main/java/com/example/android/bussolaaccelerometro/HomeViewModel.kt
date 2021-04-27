@@ -3,6 +3,7 @@ package com.example.android.bussolaaccelerometro
 import android.hardware.Sensor
 import android.hardware.SensorEvent
 import android.hardware.SensorManager
+import android.provider.ContactsContract
 import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
@@ -17,4 +18,10 @@ class HomeViewModel: ViewModel() {
     val accelY:LiveData<Float> by Database::fastAccY
     val accelZ:LiveData<Float> by Database::fastAccZ
     val gradiNord:LiveData<Int> by Database::fastGradiNord
+    val enableRecordInBackground:LiveData<Boolean> by Database::enableRecordInBackground
+
+    fun onEnableRecordInBackground(checked:Boolean)
+    {
+        Database.enableRecordInBackground.value = checked
+    }
 }

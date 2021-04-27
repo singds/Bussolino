@@ -4,13 +4,17 @@ import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.content.Context
 import android.content.Intent
+import android.content.SharedPreferences
 import android.os.Build
 import android.os.Bundle
+import android.provider.ContactsContract
 import androidx.appcompat.app.AppCompatActivity
 
 
 class MainActivity : AppCompatActivity()
 {
+    lateinit var preferences:SharedPreferences
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
@@ -23,6 +27,9 @@ class MainActivity : AppCompatActivity()
             .setClass(this, ReaderService::class.java)
             .setAction(ReaderService.ACTION_START)
         startService(intent)
+
+        preferences = getPreferences(MODE_PRIVATE)
+        Database.enableRecordInBackground.value = preferences.getBoolean(PREFERENCE_ENABLE_RECORD, false)
     }
 
     override fun onPause() {
@@ -31,6 +38,10 @@ class MainActivity : AppCompatActivity()
             .setClass(this, ReaderService::class.java)
             .setAction(ReaderService.ACTION_STOP)
         startService(intent)
+
+        preferences.edit()
+            .putBoolean(PREFERENCE_ENABLE_RECORD, Database.enableRecordInBackground.value ?: false)
+            .apply()
     }
 
     private fun createNotificationChannel() {
@@ -54,5 +65,6 @@ class MainActivity : AppCompatActivity()
     {
         const val ID_NOTIF_CH_MAIN = "NotifChMain"
         const val ID_NOTIF_READING = 1
+        const val PREFERENCE_ENABLE_RECORD = "enableRecord"
     }
 }

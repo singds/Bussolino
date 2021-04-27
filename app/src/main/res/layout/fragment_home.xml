@@ -25,13 +25,24 @@
         app:layout_constraintGuide_percent="0.5" />
 
     <include
+        android:id="@+id/bussola"
         layout="@layout/card_bussola"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.0"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/centerLine"
+        app:layout_constraintBottom_toTopOf="@+id/boxAbilita"/>
+
+    <include
+        android:id="@+id/boxAbilita"
+        layout="@layout/card_enable"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/centerLine" />
+        app:layout_constraintTop_toBottomOf="@+id/bussola" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

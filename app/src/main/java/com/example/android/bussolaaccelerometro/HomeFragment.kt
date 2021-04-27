@@ -1,6 +1,9 @@
 package com.example.android.bussolaaccelerometro
 
 import android.app.ActionBar
+import android.content.Context
+import android.content.SharedPreferences
+import android.content.res.Configuration
 import android.os.Bundle
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
@@ -8,6 +11,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.TextView
+import androidx.appcompat.widget.SwitchCompat
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.constraintlayout.widget.ConstraintSet
 import androidx.fragment.app.viewModels
@@ -63,7 +67,8 @@ class HomeFragment : Fragment()
 
 
         val vgradiNord = view.findViewById<TextView>(R.id.gradiNord)
-        val bussola = view.findViewById<ImageView>(R.id.bussola)
+        val bussola = view.findViewById<ImageView>(R.id.bussolaImg)
+        val abilita = view.findViewById<SwitchCompat>(R.id.abilita)
 
         viewModel.accelX.observe(viewLifecycleOwner, { value ->
             bindingAccX.accValue.text = "%.2f".format(value)
@@ -76,7 +81,27 @@ class HomeFragment : Fragment()
         })
         viewModel.gradiNord.observe(viewLifecycleOwner, { value ->
             vgradiNord.text = "%d °".format(value)
-            bussola.rotation = -value.toFloat()
+            bussola.rotation = -getAngoloImmagine(value).toFloat()
         })
+        viewModel.enableRecordInBackground.observe(viewLifecycleOwner, { value ->
+            abilita.isChecked = value
+        })
+        abilita.setOnCheckedChangeListener { _, isChecked ->
+            viewModel.onEnableRecordInBackground (isChecked)
+        }
+    }
+
+    /* corregge l'angolo di rotazione da applicare all'immagine sulla base dell'orintamento
+    attuale del display
+     */
+    fun getAngoloImmagine(angolo:Int): Int {
+        /* non ho trovato un modo ufficiale per distinguere fra gli stati portrait / reverse portrait
+        , landscape / reverse landscape.
+         */
+        return when (resources.configuration.orientation) {
+            Configuration.ORIENTATION_LANDSCAPE -> angolo + 90
+            Configuration.ORIENTATION_PORTRAIT -> angolo
+            else -> angolo
+        }
     }
 }
