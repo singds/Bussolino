@@ -7,7 +7,6 @@ import android.content.Intent
 import android.content.SharedPreferences
 import android.os.Build
 import android.os.Bundle
-import android.provider.ContactsContract
 import androidx.appcompat.app.AppCompatActivity
 
 
@@ -29,18 +28,23 @@ class MainActivity : AppCompatActivity()
         startService(intent)
 
         preferences = getPreferences(MODE_PRIVATE)
-        Database.enableRecordInBackground.value = preferences.getBoolean(PREFERENCE_ENABLE_RECORD, false)
+        Repository.enableRecordInBackground.value = preferences.getBoolean(PREFERENCE_ENABLE_RECORD, false)
     }
 
     override fun onPause() {
         super.onPause()
+
+        val action = when (Repository.enableRecordInBackground.value) {
+            true -> ReaderService.ACTION_RUN_IN_BACKGROUND
+            else -> ReaderService.ACTION_STOP
+        }
         val intent = Intent()
             .setClass(this, ReaderService::class.java)
-            .setAction(ReaderService.ACTION_STOP)
+            .setAction(action)
         startService(intent)
 
         preferences.edit()
-            .putBoolean(PREFERENCE_ENABLE_RECORD, Database.enableRecordInBackground.value ?: false)
+            .putBoolean(PREFERENCE_ENABLE_RECORD, Repository.enableRecordInBackground.value ?: false)
             .apply()
     }
 
