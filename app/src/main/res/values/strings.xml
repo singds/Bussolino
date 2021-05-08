@@ -7,4 +7,6 @@
     <string name="accel_y">Accelerazione y:</string>
     <string name="accel_z">Accelerazione z:</string>
     <string name="abilita_reg">Registrazione in background</string>
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
 </resources>
