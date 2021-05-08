@@ -7,6 +7,7 @@ import android.content.res.Configuration
 import android.os.Bundle
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
+import android.view.Surface
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
@@ -91,17 +92,19 @@ class HomeFragment : Fragment()
         }
     }
 
-    /* corregge l'angolo di rotazione da applicare all'immagine sulla base dell'orintamento
-    attuale del display
+    /**
+     * Angoli positivi fanno ruotare la view in senso orario.
      */
     fun getAngoloImmagine(angolo:Int): Int {
-        /* non ho trovato un modo ufficiale per distinguere fra gli stati portrait / reverse portrait
-        , landscape / reverse landscape.
-         */
-        return when (resources.configuration.orientation) {
-            Configuration.ORIENTATION_LANDSCAPE -> angolo + 90
-            Configuration.ORIENTATION_PORTRAIT -> angolo
-            else -> angolo
+        view?.display?.apply {
+            return when (rotation){
+                Surface.ROTATION_0 -> angolo
+                Surface.ROTATION_90 -> angolo + 90
+                Surface.ROTATION_180 -> angolo + 180
+                Surface.ROTATION_270 -> angolo + 270
+                else -> angolo
+            }
         }
+        return angolo;
     }
 }
