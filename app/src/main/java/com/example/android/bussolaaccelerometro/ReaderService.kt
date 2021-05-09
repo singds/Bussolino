@@ -1,18 +1,15 @@
 package com.example.android.bussolaaccelerometro
 
 import android.app.*
-import android.content.Context
 import android.content.Intent
 import android.hardware.Sensor
 import android.hardware.SensorEvent
 import android.hardware.SensorEventListener
 import android.hardware.SensorManager
-import android.os.Build
 import android.os.IBinder
 import android.util.Log
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.NotificationCompat
-import androidx.core.app.NotificationManagerCompat
 import kotlin.math.PI
 import kotlin.math.atan2
 
@@ -89,9 +86,9 @@ class ReaderService : Service(),
                 lastAccel[1] = filtroAccel(lastAccel[1], values[1])
                 lastAccel[2] = filtroAccel(lastAccel[2], values[2])
 
-                Database.fastAccX.value = lastAccel[0]
-                Database.fastAccY.value = lastAccel[1]
-                Database.fastAccZ.value = lastAccel[2]
+                Repository.fastAccX.value = lastAccel[0]
+                Repository.fastAccY.value = lastAccel[1]
+                Repository.fastAccZ.value = lastAccel[2]
             }
             if (sensor.type == Sensor.TYPE_MAGNETIC_FIELD) {
                 lastMagne[0] = filtroMagne(lastMagne[0], values[0])
@@ -103,7 +100,7 @@ class ReaderService : Service(),
 
 
                 /* calcolo angolo di rotazione rispetto nord magnetico secondo convenzione bussola */
-                Database.fastGradiNord.value = Math.round (getGradiNord(magnex, magney))
+                Repository.fastGradiNord.value = getGradiNord(magnex, magney)
             }
         }
     }
