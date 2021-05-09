@@ -8,10 +8,15 @@ object Repository
     ruotando in senso orario i gradi rispetto al nord aumentano da 0 a 360
     asse y positivo del sistema di riferimento del dispositivo = ago magnetico
      */
-    val fastGradiNord = MutableLiveData<Float>()
-    val fastAccX = MutableLiveData<Float>()
-    val fastAccY = MutableLiveData<Float>()
-    val fastAccZ = MutableLiveData<Float>()
+    val currentSample = MutableLiveData<SensorSample>()
+    val listSample = MutableLiveData<List<SensorSample>>()
 
     val enableRecordInBackground = MutableLiveData<Boolean>()
+
+    data class SensorSample(
+            val gradiNord:Float,
+            val accelX:Float,
+            val accelY:Float,
+            val accelZ:Float
+    )
 }

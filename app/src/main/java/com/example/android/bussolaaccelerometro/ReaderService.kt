@@ -6,7 +6,9 @@ import android.hardware.Sensor
 import android.hardware.SensorEvent
 import android.hardware.SensorEventListener
 import android.hardware.SensorManager
+import android.os.Handler
 import android.os.IBinder
+import android.os.Looper
 import android.util.Log
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.NotificationCompat
@@ -22,6 +24,23 @@ class ReaderService : Service(),
     private lateinit var magnetometro: Sensor
     private var lastAccel = FloatArray(3)
     private var lastMagne = FloatArray(3)
+    private val pesoFiltroMagne = 0.02f
+    private val pesoFiltroAccel = 0.1f
+    private lateinit var handler:Handler
+
+    private val timerTick = object :Runnable{
+        override fun run() {
+            val list = Repository.listSample.value
+
+            val newlist = list?.toMutableList() ?: mutableListOf<Repository.SensorSample>()
+            newlist.add(getLastSample())
+            while (newlist.size > 50)
+                newlist.removeFirst()
+            Repository.listSample.value = newlist
+
+            handler.postDelayed(this,500)
+        }
+    }
 
     override fun onCreate() {
         super.onCreate()
@@ -36,6 +55,9 @@ class ReaderService : Service(),
         sensorManager = getSystemService(AppCompatActivity.SENSOR_SERVICE) as SensorManager
         accelerometro = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER)
         magnetometro = sensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD)
+
+        handler = Handler(mainLooper)
+        handler.post(timerTick)
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
@@ -72,6 +94,7 @@ class ReaderService : Service(),
     override fun onDestroy() {
         super.onDestroy()
         Log.d("MYTAG", "service destroy")
+        handler.removeCallbacks(timerTick)
         sensorManager.unregisterListener(this)
     }
 
@@ -86,21 +109,12 @@ class ReaderService : Service(),
                 lastAccel[1] = filtroAccel(lastAccel[1], values[1])
                 lastAccel[2] = filtroAccel(lastAccel[2], values[2])
 
-                Repository.fastAccX.value = lastAccel[0]
-                Repository.fastAccY.value = lastAccel[1]
-                Repository.fastAccZ.value = lastAccel[2]
+                Repository.currentSample.value = getLastSample()
             }
             if (sensor.type == Sensor.TYPE_MAGNETIC_FIELD) {
                 lastMagne[0] = filtroMagne(lastMagne[0], values[0])
                 lastMagne[1] = filtroMagne(lastMagne[1], values[1])
                 lastMagne[2] = filtroMagne(lastMagne[2], values[2])
-
-                val magnex = lastMagne[0]
-                val magney = lastMagne[1]
-
-
-                /* calcolo angolo di rotazione rispetto nord magnetico secondo convenzione bussola */
-                Repository.fastGradiNord.value = getGradiNord(magnex, magney)
             }
         }
     }
@@ -111,18 +125,28 @@ class ReaderService : Service(),
         }
     }
 
+    private fun getLastSample():Repository.SensorSample {
+        val magnex = lastMagne[0]
+        val magney = lastMagne[1]
+
+        return Repository.SensorSample(
+                getGradiNord(magnex,magney),
+                lastAccel[0],
+                lastAccel[1],
+                lastAccel[2]
+        )
+    }
+
+    private fun filtroMagne(oldval: Float?, newval: Float) = (oldval ?: 0.0f) * (1f - pesoFiltroMagne) + newval * pesoFiltroMagne
+
+    private fun filtroAccel(oldval: Float?, newval: Float) = (oldval ?: 0.0f) * (1f - pesoFiltroAccel) + newval * pesoFiltroAccel
+
+    private fun getGradiNord(magx:Float, magy:Float) = ((-atan2(magx, magy) * 180f / PI.toFloat()) + 360) % 360
+
     companion object
     {
         const val ACTION_START = "start"
         const val ACTION_STOP = "stop"
         const val ACTION_RUN_IN_BACKGROUND = "background"
-
-        private const val pesoFiltroMagne = 0.02f
-        private fun filtroMagne(oldval: Float?, newval: Float) = (oldval ?: 0.0f) * (1f - pesoFiltroMagne) + newval * pesoFiltroMagne
-
-        private const val pesoFiltroAccel = 0.1f
-        private fun filtroAccel(oldval: Float?, newval: Float) = (oldval ?: 0.0f) * (1f - pesoFiltroAccel) + newval * pesoFiltroAccel
-
-        private fun getGradiNord(magx:Float, magy:Float) = ((-atan2(magx, magy) * 180f / PI.toFloat()) + 360) % 360
     }
 }

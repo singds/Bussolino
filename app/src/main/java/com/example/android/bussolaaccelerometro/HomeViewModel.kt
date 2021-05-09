@@ -6,10 +6,10 @@ import androidx.lifecycle.ViewModel
 
 class HomeViewModel: ViewModel() {
 
-    val accelX:LiveData<Float> by Repository::fastAccX
-    val accelY:LiveData<Float> by Repository::fastAccY
-    val accelZ:LiveData<Float> by Repository::fastAccZ
-    val gradiNord = Transformations.map(Repository.fastGradiNord) { Math.round(it) }
+    val accelX = Transformations.map(Repository.currentSample) {it.accelX}
+    val accelY = Transformations.map(Repository.currentSample) {it.accelY}
+    val accelZ = Transformations.map(Repository.currentSample) {it.accelZ}
+    val gradiNord = Transformations.map(Repository.currentSample) {Math.round(it.gradiNord)}
     val enableRecordInBackground:LiveData<Boolean> by Repository::enableRecordInBackground
 
     fun onEnableRecordInBackground(checked:Boolean)
