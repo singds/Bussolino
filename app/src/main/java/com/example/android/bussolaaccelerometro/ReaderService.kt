@@ -27,18 +27,23 @@ class ReaderService : Service(),
     private val pesoFiltroMagne = 0.02f
     private val pesoFiltroAccel = 0.1f
     private lateinit var handler:Handler
+    private var sampleCounter:Int = 0
 
     private val timerTick = object :Runnable{
         override fun run() {
             val list = Repository.listSample.value
 
-            val newlist = list?.toMutableList() ?: mutableListOf<Repository.SensorSample>()
-            newlist.add(getLastSample())
-            while (newlist.size > 50)
+            val newlist = list?.toMutableList() ?: MutableList(MAX_CAMPIONI) {
+                index -> Repository.SensorRecord(
+                    Repository.SensorSample(0f,0f,0f,0f), -MAX_CAMPIONI +index)
+            }
+            newlist.add(Repository.SensorRecord(getLastSample(), sampleCounter))
+            sampleCounter++
+            while (newlist.size > MAX_CAMPIONI)
                 newlist.removeFirst()
             Repository.listSample.value = newlist
 
-            handler.postDelayed(this,500)
+            handler.postDelayed(this,50)
         }
     }
 
@@ -96,6 +101,7 @@ class ReaderService : Service(),
         Log.d("MYTAG", "service destroy")
         handler.removeCallbacks(timerTick)
         sensorManager.unregisterListener(this)
+        Repository.listSample.value = null
     }
 
     override fun onBind(intent: Intent?): IBinder? {
@@ -148,5 +154,6 @@ class ReaderService : Service(),
         const val ACTION_START = "start"
         const val ACTION_STOP = "stop"
         const val ACTION_RUN_IN_BACKGROUND = "background"
+        const val MAX_CAMPIONI = 600
     }
 }

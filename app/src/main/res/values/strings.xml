@@ -2,11 +2,13 @@
     <string name="app_name">BussolaAccelerometro</string>
     <string name="notif_ch_main">Canale principale</string>
     <string name="notif_ch_main_description">Tutte le notifiche</string>
-    <string name="udm_ms2">m/s2</string>
+    <string name="udm_ms2">m/s²</string>
     <string name="accel_x">Accelerazione x:</string>
     <string name="accel_y">Accelerazione y:</string>
     <string name="accel_z">Accelerazione z:</string>
+    <string name="Accelerazione_x">Accelerazione x [m/s²]</string>
+    <string name="Accelerazione_y">Accelerazione y [m/s²]</string>
+    <string name="Accelerazione_z">Accelerazione z [m/s²]</string>
+    <string name="Gradi_nord">Gradi nord [°]</string>
     <string name="abilita_reg">Registrazione in background</string>
-    <!-- TODO: Remove or change this placeholder text -->
-    <string name="hello_blank_fragment">Hello blank fragment</string>
 </resources>

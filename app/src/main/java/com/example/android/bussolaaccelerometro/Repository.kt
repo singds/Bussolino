@@ -9,7 +9,7 @@ object Repository
     asse y positivo del sistema di riferimento del dispositivo = ago magnetico
      */
     val currentSample = MutableLiveData<SensorSample>()
-    val listSample = MutableLiveData<List<SensorSample>>()
+    val listSample = MutableLiveData<List<SensorRecord>>()
 
     val enableRecordInBackground = MutableLiveData<Boolean>()
 
@@ -18,5 +18,10 @@ object Repository
             val accelX:Float,
             val accelY:Float,
             val accelZ:Float
+    )
+
+    data class SensorRecord(
+            val sample: SensorSample,
+            val time: Int
     )
 }
