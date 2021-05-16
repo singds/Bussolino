@@ -12,6 +12,7 @@ import android.os.Looper
 import android.util.Log
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.NotificationCompat
+import java.util.*
 import kotlin.math.PI
 import kotlin.math.atan2
 
@@ -31,19 +32,19 @@ class ReaderService : Service(),
 
     private val timerTick = object :Runnable{
         override fun run() {
-            val list = Repository.listSample.value
+            val list = Repository.listSample
 
-            val newlist = list?.toMutableList() ?: MutableList(MAX_CAMPIONI) {
-                index -> Repository.SensorRecord(
-                    Repository.SensorSample(0f,0f,0f,0f), -MAX_CAMPIONI +index)
+            val newlist = list?.toMutableList() ?: MutableList(NUM_CAMPIONI) {
+                Repository.SensorSample(0f,0f,0f,0f)
             }
-            newlist.add(Repository.SensorRecord(getLastSample(), sampleCounter))
+            newlist.add(getLastSample())
             sampleCounter++
-            while (newlist.size > MAX_CAMPIONI)
+            while (newlist.size > NUM_CAMPIONI)
                 newlist.removeFirst()
-            Repository.listSample.value = newlist
+            Repository.listSample = newlist
+            Repository.listSampleTime.value = Date()
 
-            handler.postDelayed(this,50)
+            handler.postDelayed(this,500)
         }
     }
 
@@ -101,7 +102,8 @@ class ReaderService : Service(),
         Log.d("MYTAG", "service destroy")
         handler.removeCallbacks(timerTick)
         sensorManager.unregisterListener(this)
-        Repository.listSample.value = null
+        Repository.listSample = null
+        Repository.listSampleTime.value = null
     }
 
     override fun onBind(intent: Intent?): IBinder? {
@@ -154,6 +156,7 @@ class ReaderService : Service(),
         const val ACTION_START = "start"
         const val ACTION_STOP = "stop"
         const val ACTION_RUN_IN_BACKGROUND = "background"
-        const val MAX_CAMPIONI = 600
+        const val NUM_CAMPIONI = 600
+        const val MS_FRA_CAMPIONI = 500
     }
 }
