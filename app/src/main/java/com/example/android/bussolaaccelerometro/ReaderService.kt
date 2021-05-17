@@ -34,15 +34,12 @@ class ReaderService : Service(),
         override fun run() {
             val list = Repository.listSample
 
-            val newlist = list?.toMutableList() ?: MutableList(NUM_CAMPIONI) {
-                Repository.SensorSample(0f,0f,0f,0f)
-            }
+            val newlist = list.value?.toMutableList() ?: mutableListOf()
             newlist.add(getLastSample())
             sampleCounter++
             while (newlist.size > NUM_CAMPIONI)
                 newlist.removeFirst()
-            Repository.listSample = newlist
-            Repository.listSampleTime.value = Date()
+            Repository.listSample.value = newlist
 
             handler.postDelayed(this,500)
         }
@@ -102,8 +99,7 @@ class ReaderService : Service(),
         Log.d("MYTAG", "service destroy")
         handler.removeCallbacks(timerTick)
         sensorManager.unregisterListener(this)
-        Repository.listSample = null
-        Repository.listSampleTime.value = null
+        Repository.listSample.value = null
     }
 
     override fun onBind(intent: Intent?): IBinder? {
@@ -141,7 +137,8 @@ class ReaderService : Service(),
                 getGradiNord(magnex,magney),
                 lastAccel[0],
                 lastAccel[1],
-                lastAccel[2]
+                lastAccel[2],
+                Date()
         )
     }
 

@@ -22,8 +22,7 @@ class ChartFragment : Fragment() {
     lateinit var chartAccY:LineChart
     lateinit var chartAccZ:LineChart
     lateinit var chartGradiNord:LineChart
-    var firstXTime = Date()
-    var firstXValue = 0f
+    var startRefTime:Long = -1
 
     override fun onCreateView(
             inflater: LayoutInflater, container: ViewGroup?,
@@ -61,8 +60,8 @@ class ChartFragment : Fragment() {
 
 
         chart.xAxis.apply {
-            granularity = 60 * 1000f // granularità del minuto
-            isGranularityEnabled = true
+//            granularity = 1f // granularita di 1 secondo
+//            isGranularityEnabled = true
             position = XAxis.XAxisPosition.BOTTOM
         }
 
@@ -75,8 +74,8 @@ class ChartFragment : Fragment() {
 //        chart.onChartGestureListener = GestureListener(chart)
         chart.isHighlightPerDragEnabled = false
         chart.isHighlightPerTapEnabled = false
-        chart.isDragXEnabled = false
-        chart.isScaleXEnabled = false
+        chart.isDragXEnabled = true
+        chart.isScaleXEnabled = true
         chart.isDragYEnabled = false
         chart.isScaleYEnabled = false
         chart.isDoubleTapToZoomEnabled = false
@@ -95,11 +94,10 @@ class ChartFragment : Fragment() {
             arr.add(Entry(times[k], values[k]))
         dataSet.values = arr
 
-        // minimo 30 secondi di campioni
-//        chart.setVisibleXRange(60f, 60f)
+        chart.setVisibleXRangeMinimum(30f) // al minimo visibili 30 secondi
 
         chart.xAxis.valueFormatter = XAxisFormatter()
-        dataSet.notifyDataSetChanged()
+//        dataSet.notifyDataSetChanged()
         data.notifyDataChanged()
         chart.notifyDataSetChanged()
         chart.invalidate()
@@ -108,41 +106,45 @@ class ChartFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        Repository.listSampleTime.observe(viewLifecycleOwner) { time ->
-            Repository.listSample?.let { list ->
-                val listAccX = list.map { value -> value.accelX }
-                val listAccY = list.map { value -> value.accelY }
-                val listAccZ = list.map { value -> value.accelZ }
-                val listGradiNord = list.map { value -> value.gradiNord }
-
-                val listTimes = ArrayList<Float>()
-
-                firstXTime = Date(time.time - ReaderService.MS_FRA_CAMPIONI * listAccX.size)
-                val calendar = Calendar.getInstance()
-                calendar.setTime(firstXTime)
-
-                firstXValue = (calendar.get(Calendar.SECOND) * 1000 + calendar.get(Calendar.MILLISECOND)).toFloat()
-                for (i in listAccX.indices)
-                    listTimes.add(firstXValue + i * ReaderService.MS_FRA_CAMPIONI)
-
-                refreshChart(chartAccX, listAccX, listTimes)
-                refreshChart(chartAccY, listAccY, listTimes)
-                refreshChart(chartAccZ, listAccZ, listTimes)
-                refreshChart(chartGradiNord, listGradiNord, listTimes)
+        Repository.listSample.observe(viewLifecycleOwner) { list ->
+            if (startRefTime == -1L) {
+                val firstTimestamp = list[0].timestamp.time
+                startRefTime = firstTimestamp - (firstTimestamp % 60)
             }
+            val listAccX = list.map { value -> value.accelX }
+            val listAccY = list.map { value -> value.accelY }
+            val listAccZ = list.map { value -> value.accelZ }
+            val listGradiNord = list.map { value -> value.gradiNord }
+
+            val xvalues = ArrayList<Float>()
+            for (elem in list)
+            {
+                val floatTime = (elem.timestamp.time - startRefTime) / 1000f
+                xvalues.add(floatTime)
+            }
+
+            refreshChart(chartAccX, listAccX, xvalues)
+            refreshChart(chartAccY, listAccY, xvalues)
+            refreshChart(chartAccZ, listAccZ, xvalues)
+            refreshChart(chartGradiNord, listGradiNord, xvalues)
         }
     }
 
     inner class XAxisFormatter : ValueFormatter() {
         override fun getAxisLabel(value: Float, axis: AxisBase?): String {
-            val thisTime = Date(firstXTime.time + (value - firstXValue).toInt())
+            val timestamp = startRefTime + (value * 1000).toLong()
             val calendar = Calendar.getInstance()
-            calendar.setTime(thisTime)
-            return "%d:%02d".format(calendar.get(Calendar.HOUR_OF_DAY),calendar.get(Calendar.MINUTE))
+            calendar.setTime(Date(timestamp))
+            return "%02d:%02d".format(calendar.get(Calendar.MINUTE),calendar.get(Calendar.SECOND))
         }
     }
 
-//    private inner class GestureListener(val chart:LineChart):
+    override fun onStop() {
+        super.onStop()
+        startRefTime = -1
+    }
+
+    //    private inner class GestureListener(val chart:LineChart):
 //            OnChartGestureListener
 //    {
 //        override fun onChartGestureStart(me: MotionEvent?, lastPerformedGesture: ChartTouchListener.ChartGesture?) {
