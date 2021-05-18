@@ -11,4 +11,6 @@
     <string name="Accelerazione_z">Accelerazione z [m/s²]</string>
     <string name="Gradi_nord">Gradi nord [°]</string>
     <string name="abilita_reg">Registrazione in background</string>
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
 </resources>

@@ -1,17 +1,23 @@
 package com.example.android.bussolaaccelerometro
 
+import android.graphics.Matrix
 import android.os.Bundle
 import android.view.LayoutInflater
+import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import com.github.mikephil.charting.charts.LineChart
 import com.github.mikephil.charting.components.AxisBase
 import com.github.mikephil.charting.components.XAxis
+import com.github.mikephil.charting.components.YAxis
 import com.github.mikephil.charting.data.Entry
 import com.github.mikephil.charting.data.LineData
 import com.github.mikephil.charting.data.LineDataSet
 import com.github.mikephil.charting.formatter.ValueFormatter
+import com.github.mikephil.charting.listener.ChartTouchListener
+import com.github.mikephil.charting.listener.OnChartGestureListener
+import com.google.android.material.floatingactionbutton.FloatingActionButton
 import java.util.*
 import kotlin.collections.ArrayList
 
@@ -23,10 +29,11 @@ class ChartFragment : Fragment() {
     lateinit var chartAccZ:LineChart
     lateinit var chartGradiNord:LineChart
     var startRefTime:Long = -1
+    var holdMode = false
 
     override fun onCreateView(
-            inflater: LayoutInflater, container: ViewGroup?,
-            savedInstanceState: Bundle?
+        inflater: LayoutInflater, container: ViewGroup?,
+        savedInstanceState: Bundle?
     ): View? {
         // Inflate the layout for this fragment
         val root = inflater.inflate(R.layout.fragment_chart, container, false)
@@ -41,10 +48,37 @@ class ChartFragment : Fragment() {
         setupEmptyChart(chartAccZ, -12f, 12f, getString(R.string.Accelerazione_z))
         setupEmptyChart(chartGradiNord, 0f, 360f, getString(R.string.Gradi_nord), false)
 
+        val hold = root.findViewById<FloatingActionButton>(R.id.hold)
+        hold.setOnClickListener {
+            if (holdMode) {
+                holdMode = false
+                hold.setImageResource(R.drawable.ic_lock_data)
+                for (c in listOf(chartAccX, chartAccY, chartAccZ, chartGradiNord)) {
+                    c.isDragXEnabled = false
+                    c.isScaleXEnabled = false
+                    c.fitScreen()
+                }
+            } else {
+                holdMode = true
+                hold.setImageResource(R.drawable.ic_unlock_data)
+                for (c in listOf(chartAccX, chartAccY, chartAccZ, chartGradiNord)) {
+                    c.isDragXEnabled = true
+                    c.isScaleXEnabled = true
+                }
+            }
+        }
+
         return root
     }
 
-    private fun setupEmptyChart(chart: LineChart, min: Float, max: Float, label: String, fill: Boolean = true, lineWidth: Float = 1.5f) {
+    private fun setupEmptyChart(
+        chart: LineChart,
+        min: Float,
+        max: Float,
+        label: String,
+        fill: Boolean = true,
+        lineWidth: Float = 1.3f
+    ) {
         val arr = ArrayList<Entry>()
         for (k in 0 until ReaderService.NUM_CAMPIONI)
             arr.add(Entry(0f, 0f))
@@ -60,8 +94,8 @@ class ChartFragment : Fragment() {
 
 
         chart.xAxis.apply {
-//            granularity = 1f // granularita di 1 secondo
-//            isGranularityEnabled = true
+            granularity = 1f
+            isGranularityEnabled = true
             position = XAxis.XAxisPosition.BOTTOM
         }
 
@@ -70,12 +104,12 @@ class ChartFragment : Fragment() {
             axisMinimum = min
         }
 
-        chart.description.isEnabled = false
 //        chart.onChartGestureListener = GestureListener(chart)
+        chart.description.isEnabled = false
         chart.isHighlightPerDragEnabled = false
         chart.isHighlightPerTapEnabled = false
-        chart.isDragXEnabled = true
-        chart.isScaleXEnabled = true
+        chart.isDragXEnabled = false
+        chart.isScaleXEnabled = false
         chart.isDragYEnabled = false
         chart.isScaleYEnabled = false
         chart.isDoubleTapToZoomEnabled = false
@@ -94,10 +128,8 @@ class ChartFragment : Fragment() {
             arr.add(Entry(times[k], values[k]))
         dataSet.values = arr
 
-        chart.setVisibleXRangeMinimum(30f) // al minimo visibili 30 secondi
-
         chart.xAxis.valueFormatter = XAxisFormatter()
-//        dataSet.notifyDataSetChanged()
+        dataSet.notifyDataSetChanged()
         data.notifyDataChanged()
         chart.notifyDataSetChanged()
         chart.invalidate()
@@ -107,26 +139,27 @@ class ChartFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
 
         Repository.listSample.observe(viewLifecycleOwner) { list ->
-            if (startRefTime == -1L) {
-                val firstTimestamp = list[0].timestamp.time
-                startRefTime = firstTimestamp - (firstTimestamp % 60)
-            }
-            val listAccX = list.map { value -> value.accelX }
-            val listAccY = list.map { value -> value.accelY }
-            val listAccZ = list.map { value -> value.accelZ }
-            val listGradiNord = list.map { value -> value.gradiNord }
+            if (!holdMode) {
+                if (startRefTime == -1L) {
+                    val firstTimestamp = list[0].timestamp.time
+                    startRefTime = firstTimestamp - (firstTimestamp % 60)
+                }
+                val listAccX = list.map { value -> value.accelX }
+                val listAccY = list.map { value -> value.accelY }
+                val listAccZ = list.map { value -> value.accelZ }
+                val listGradiNord = list.map { value -> value.gradiNord }
 
-            val xvalues = ArrayList<Float>()
-            for (elem in list)
-            {
-                val floatTime = (elem.timestamp.time - startRefTime) / 1000f
-                xvalues.add(floatTime)
-            }
+                val xvalues = ArrayList<Float>()
+                for (elem in list) {
+                    val floatTime = (elem.timestamp.time - startRefTime) / 1000f
+                    xvalues.add(floatTime)
+                }
 
-            refreshChart(chartAccX, listAccX, xvalues)
-            refreshChart(chartAccY, listAccY, xvalues)
-            refreshChart(chartAccZ, listAccZ, xvalues)
-            refreshChart(chartGradiNord, listGradiNord, xvalues)
+                refreshChart(chartAccX, listAccX, xvalues)
+                refreshChart(chartAccY, listAccY, xvalues)
+                refreshChart(chartAccZ, listAccZ, xvalues)
+                refreshChart(chartGradiNord, listGradiNord, xvalues)
+            }
         }
     }
 
@@ -135,7 +168,7 @@ class ChartFragment : Fragment() {
             val timestamp = startRefTime + (value * 1000).toLong()
             val calendar = Calendar.getInstance()
             calendar.setTime(Date(timestamp))
-            return "%02d:%02d".format(calendar.get(Calendar.MINUTE),calendar.get(Calendar.SECOND))
+            return "%02d:%02d".format(calendar.get(Calendar.MINUTE), calendar.get(Calendar.SECOND))
         }
     }
 
@@ -144,25 +177,39 @@ class ChartFragment : Fragment() {
         startRefTime = -1
     }
 
-    //    private inner class GestureListener(val chart:LineChart):
+//    var changing = false
+//
+//    private inner class GestureListener(val chart: LineChart):
 //            OnChartGestureListener
 //    {
-//        override fun onChartGestureStart(me: MotionEvent?, lastPerformedGesture: ChartTouchListener.ChartGesture?) {
+//        override fun onChartGestureStart(
+//            me: MotionEvent?,
+//            lastPerformedGesture: ChartTouchListener.ChartGesture?
+//        ) {
 //        }
 //
-//        override fun onChartGestureEnd(me: MotionEvent?, lastPerformedGesture: ChartTouchListener.ChartGesture?) {
+//        override fun onChartGestureEnd(
+//            me: MotionEvent?,
+//            lastPerformedGesture: ChartTouchListener.ChartGesture?
+//        ) {
 //        }
 //
 //        override fun onChartLongPressed(me: MotionEvent?) {
 //        }
 //
 //        override fun onChartDoubleTapped(me: MotionEvent?) {
+//
 //        }
 //
 //        override fun onChartSingleTapped(me: MotionEvent?) {
 //        }
 //
-//        override fun onChartFling(me1: MotionEvent?, me2: MotionEvent?, velocityX: Float, velocityY: Float) {
+//        override fun onChartFling(
+//            me1: MotionEvent?,
+//            me2: MotionEvent?,
+//            velocityX: Float,
+//            velocityY: Float
+//        ) {
 //        }
 //
 //        override fun onChartScale(me: MotionEvent?, scaleX: Float, scaleY: Float) {
@@ -173,14 +220,33 @@ class ChartFragment : Fragment() {
 //            allineaGrafici()
 //        }
 //
-//        private fun allineaGrafici(){
-//            val xindex = chart.lowestVisibleX
-//            val xrange = chart.visibleXRange
-//            for (c in listOf(chartAccX, chartAccY, chartAccZ, chartGradiNord))
-//            {
-//                c.setVisibleXRange(xrange,xrange)
-//                c.moveViewToX(xindex)
-//                c.setVisibleXRange(60f, ReaderService.MAX_CAMPIONI.toFloat())
+//        fun allineaGrafici() {
+//            if (!changing) {
+//                changing = true
+//
+//                val srcMatrix: Matrix
+//                val srcVals = FloatArray(9)
+//                var dstMatrix: Matrix
+//                val dstVals = FloatArray(9)
+//
+//                // get src chart translation matrix:
+//                srcMatrix = chart.getViewPortHandler().getMatrixTouch()
+//                srcMatrix.getValues(srcVals)
+//
+//                // apply X axis scaling and position to dst charts:
+//                for (dstChart in listOf(chartAccX, chartAccY, chartAccZ, chartGradiNord)) {
+//                    if (chart != dstChart) {
+//                        if (dstChart.visibility == View.VISIBLE) {
+//                            dstMatrix = dstChart.viewPortHandler.matrixTouch
+//                            dstMatrix.getValues(dstVals)
+//                            dstVals[Matrix.MSCALE_X] = srcVals[Matrix.MSCALE_X]
+//                            dstVals[Matrix.MTRANS_X] = srcVals[Matrix.MTRANS_X]
+//                            dstMatrix.setValues(dstVals)
+//                            dstChart.viewPortHandler.refresh(dstMatrix, dstChart, true)
+//                        }
+//                    }
+//                }
+//                changing = false
 //            }
 //        }
 //    }
