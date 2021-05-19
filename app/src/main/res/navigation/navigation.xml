@@ -13,18 +13,10 @@
         <action
             android:id="@+id/action_homeFragment_to_chartFragment"
             app:destination="@id/chartFragment" />
-        <action
-            android:id="@+id/action_homeFragment_to_singleChartFragment"
-            app:destination="@id/singleChartFragment" />
     </fragment>
     <fragment
         android:id="@+id/chartFragment"
         android:name="com.example.android.bussolaaccelerometro.ChartFragment"
         android:label="fragment_chart"
         tools:layout="@layout/fragment_chart" />
-    <fragment
-        android:id="@+id/singleChartFragment"
-        android:name="com.example.android.bussolaaccelerometro.SingleChartFragment"
-        android:label="fragment_single_chart"
-        tools:layout="@layout/fragment_single_chart" />
 </navigation>

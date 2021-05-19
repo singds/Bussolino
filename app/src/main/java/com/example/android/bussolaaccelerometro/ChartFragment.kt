@@ -2,6 +2,7 @@ package com.example.android.bussolaaccelerometro
 
 import android.graphics.Matrix
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.MotionEvent
 import android.view.View
@@ -15,6 +16,7 @@ import com.github.mikephil.charting.data.Entry
 import com.github.mikephil.charting.data.LineData
 import com.github.mikephil.charting.data.LineDataSet
 import com.github.mikephil.charting.formatter.ValueFormatter
+import com.github.mikephil.charting.listener.BarLineChartTouchListener
 import com.github.mikephil.charting.listener.ChartTouchListener
 import com.github.mikephil.charting.listener.OnChartGestureListener
 import com.google.android.material.floatingactionbutton.FloatingActionButton
@@ -54,9 +56,11 @@ class ChartFragment : Fragment() {
                 holdMode = false
                 hold.setImageResource(R.drawable.ic_lock_data)
                 for (c in listOf(chartAccX, chartAccY, chartAccZ, chartGradiNord)) {
+                    // per interrompere l'eventuale scrolling in corso
+                    val listener = c.onTouchListener as BarLineChartTouchListener
+                    listener.stopDeceleration()
                     c.isDragXEnabled = false
                     c.isScaleXEnabled = false
-                    c.fitScreen()
                 }
             } else {
                 holdMode = true
@@ -104,7 +108,8 @@ class ChartFragment : Fragment() {
             axisMinimum = min
         }
 
-//        chart.onChartGestureListener = GestureListener(chart)
+//        chart.isDragDecelerationEnabled = false
+        chart.onChartGestureListener = GestureListener(chart)
         chart.description.isEnabled = false
         chart.isHighlightPerDragEnabled = false
         chart.isHighlightPerTapEnabled = false
@@ -127,11 +132,14 @@ class ChartFragment : Fragment() {
         for (k in values.indices)
             arr.add(Entry(times[k], values[k]))
         dataSet.values = arr
+        dataSet.setDrawValues(false)
+        dataSet.setDrawCircles(false)
 
         chart.xAxis.valueFormatter = XAxisFormatter()
         dataSet.notifyDataSetChanged()
         data.notifyDataChanged()
         chart.notifyDataSetChanged()
+        chart.fitScreen()
         chart.invalidate()
     }
 
@@ -177,77 +185,58 @@ class ChartFragment : Fragment() {
         startRefTime = -1
     }
 
-//    var changing = false
-//
-//    private inner class GestureListener(val chart: LineChart):
-//            OnChartGestureListener
-//    {
-//        override fun onChartGestureStart(
-//            me: MotionEvent?,
-//            lastPerformedGesture: ChartTouchListener.ChartGesture?
-//        ) {
-//        }
-//
-//        override fun onChartGestureEnd(
-//            me: MotionEvent?,
-//            lastPerformedGesture: ChartTouchListener.ChartGesture?
-//        ) {
-//        }
-//
-//        override fun onChartLongPressed(me: MotionEvent?) {
-//        }
-//
-//        override fun onChartDoubleTapped(me: MotionEvent?) {
-//
-//        }
-//
-//        override fun onChartSingleTapped(me: MotionEvent?) {
-//        }
-//
-//        override fun onChartFling(
-//            me1: MotionEvent?,
-//            me2: MotionEvent?,
-//            velocityX: Float,
-//            velocityY: Float
-//        ) {
-//        }
-//
-//        override fun onChartScale(me: MotionEvent?, scaleX: Float, scaleY: Float) {
-//            allineaGrafici()
-//        }
-//
-//        override fun onChartTranslate(me: MotionEvent?, dX: Float, dY: Float) {
-//            allineaGrafici()
-//        }
-//
-//        fun allineaGrafici() {
-//            if (!changing) {
-//                changing = true
-//
-//                val srcMatrix: Matrix
-//                val srcVals = FloatArray(9)
-//                var dstMatrix: Matrix
-//                val dstVals = FloatArray(9)
-//
-//                // get src chart translation matrix:
-//                srcMatrix = chart.getViewPortHandler().getMatrixTouch()
-//                srcMatrix.getValues(srcVals)
-//
-//                // apply X axis scaling and position to dst charts:
-//                for (dstChart in listOf(chartAccX, chartAccY, chartAccZ, chartGradiNord)) {
-//                    if (chart != dstChart) {
-//                        if (dstChart.visibility == View.VISIBLE) {
-//                            dstMatrix = dstChart.viewPortHandler.matrixTouch
-//                            dstMatrix.getValues(dstVals)
-//                            dstVals[Matrix.MSCALE_X] = srcVals[Matrix.MSCALE_X]
-//                            dstVals[Matrix.MTRANS_X] = srcVals[Matrix.MTRANS_X]
-//                            dstMatrix.setValues(dstVals)
-//                            dstChart.viewPortHandler.refresh(dstMatrix, dstChart, true)
-//                        }
-//                    }
-//                }
-//                changing = false
-//            }
-//        }
-//    }
+    private class GestureListener(val chart: LineChart):
+            OnChartGestureListener
+    {
+        override fun onChartGestureStart(
+            me: MotionEvent?,
+            lastPerformedGesture: ChartTouchListener.ChartGesture?
+        ) {
+            Log.d("MYTAG","gesture start")
+        }
+
+        override fun onChartGestureEnd(
+            me: MotionEvent?,
+            lastPerformedGesture: ChartTouchListener.ChartGesture?
+        ) {
+            Log.d("MYTAG","gesture stop")
+        }
+
+        override fun onChartLongPressed(me: MotionEvent?) {
+        }
+
+        override fun onChartDoubleTapped(me: MotionEvent?) {
+
+        }
+
+        override fun onChartSingleTapped(me: MotionEvent?) {
+        }
+
+        override fun onChartFling(
+            me1: MotionEvent?,
+            me2: MotionEvent?,
+            velocityX: Float,
+            velocityY: Float
+        ) {
+        }
+
+        override fun onChartScale(me: MotionEvent?, scaleX: Float, scaleY: Float) {
+            val xMinSec = chart.lowestVisibleX
+            val xMaxSec = chart.highestVisibleX
+            // numero di secondi visibili a schermo
+            val visibleSec = xMaxSec - xMinSec
+            val dataSet = chart.data.getDataSetByIndex(0) as LineDataSet
+
+            if (visibleSec < 10f) {
+                dataSet.setDrawValues(true)
+                dataSet.setDrawCircles(true)
+            } else {
+                dataSet.setDrawValues(false)
+                dataSet.setDrawCircles(false)
+            }
+        }
+
+        override fun onChartTranslate(me: MotionEvent?, dX: Float, dY: Float) {
+        }
+    }
 }
