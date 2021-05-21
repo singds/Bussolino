@@ -34,14 +34,22 @@ class MainActivity : AppCompatActivity()
     override fun onPause() {
         super.onPause()
 
-        val action = when (Repository.enableRecordInBackground.value) {
-            true -> ReaderService.ACTION_RUN_IN_BACKGROUND
-            else -> ReaderService.ACTION_STOP
+        // se sto soltanto cambiando configurazione non modifico lo stato del servizio
+        if (!isChangingConfigurations) {
+            val action = when (Repository.enableRecordInBackground.value) {
+                true -> {
+                    val intentStartInBackground = Intent()
+                            .setClass(this, ReaderService::class.java)
+                            .setAction(ReaderService.ACTION_RUN_IN_BACKGROUND)
+                    startService(intentStartInBackground)
+                }
+                else -> {
+                    val intentStop = Intent()
+                            .setClass(this,ReaderService::class.java)
+                   stopService(intentStop)
+                }
+            }
         }
-        val intent = Intent()
-            .setClass(this, ReaderService::class.java)
-            .setAction(action)
-        startService(intent)
 
         preferences.edit()
             .putBoolean(PREFERENCE_ENABLE_RECORD, Repository.enableRecordInBackground.value ?: false)
@@ -54,9 +62,9 @@ class MainActivity : AppCompatActivity()
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O)
         {
             val channel = NotificationChannel(ID_NOTIF_CH_MAIN,
-                    getString(R.string.notif_ch_main),
+                    getString(R.string.canale_principale),
                     NotificationManager.IMPORTANCE_LOW)
-            channel.description = getString(R.string.notif_ch_main_description)
+            channel.description = getString(R.string.tutte_le_notifiche)
 
             // Un canale può essere registrato più volte senza errori
             val notificationManager: NotificationManager =

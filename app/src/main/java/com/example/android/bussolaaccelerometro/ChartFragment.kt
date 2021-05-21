@@ -1,8 +1,6 @@
 package com.example.android.bussolaaccelerometro
 
-import android.graphics.Matrix
 import android.os.Bundle
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.MotionEvent
 import android.view.View
@@ -11,7 +9,6 @@ import androidx.fragment.app.Fragment
 import com.github.mikephil.charting.charts.LineChart
 import com.github.mikephil.charting.components.AxisBase
 import com.github.mikephil.charting.components.XAxis
-import com.github.mikephil.charting.components.YAxis
 import com.github.mikephil.charting.data.Entry
 import com.github.mikephil.charting.data.LineData
 import com.github.mikephil.charting.data.LineDataSet
@@ -30,7 +27,6 @@ class ChartFragment : Fragment() {
     lateinit var chartAccY:LineChart
     lateinit var chartAccZ:LineChart
     lateinit var chartGradiNord:LineChart
-    var startRefTime:Long = -1
     var holdMode = false
 
     override fun onCreateView(
@@ -45,10 +41,10 @@ class ChartFragment : Fragment() {
         chartAccZ = root.findViewById(R.id.chartAccZ) as LineChart
         chartGradiNord = root.findViewById(R.id.chartGradiNord) as LineChart
 
-        setupEmptyChart(chartAccX, -12f, 12f, getString(R.string.Accelerazione_x))
-        setupEmptyChart(chartAccY, -12f, 12f, getString(R.string.Accelerazione_y))
-        setupEmptyChart(chartAccZ, -12f, 12f, getString(R.string.Accelerazione_z))
-        setupEmptyChart(chartGradiNord, 0f, 360f, getString(R.string.Gradi_nord), false)
+        setupEmptyChart(chartAccX, -12f, 12f, getString(R.string.accelerazione_x_udm))
+        setupEmptyChart(chartAccY, -12f, 12f, getString(R.string.accelerazione_y_udm))
+        setupEmptyChart(chartAccZ, -12f, 12f, getString(R.string.accelerazione_z_udm))
+        setupEmptyChart(chartGradiNord, 0f, 360f, getString(R.string.gradi_nord), false)
 
         val hold = root.findViewById<FloatingActionButton>(R.id.hold)
         hold.setOnClickListener {
@@ -124,18 +120,18 @@ class ChartFragment : Fragment() {
         chart.invalidate()
     }
 
-    private fun refreshChart(chart: LineChart, values: List<Float>, times: List<Float>) {
+    private fun refreshChart(chart: LineChart, values: List<Float>, times: List<Float>, firstTimestamp:Long) {
         val data = chart.data
         val dataSet = data.getDataSetByIndex(0) as LineDataSet
 
         val arr = ArrayList<Entry>()
-        for (k in values.indices)
+        for (k in values.size - 1 downTo 0)
             arr.add(Entry(times[k], values[k]))
         dataSet.values = arr
         dataSet.setDrawValues(false)
         dataSet.setDrawCircles(false)
 
-        chart.xAxis.valueFormatter = XAxisFormatter()
+        chart.xAxis.valueFormatter = XAxisFormatter(firstTimestamp)
         dataSet.notifyDataSetChanged()
         data.notifyDataChanged()
         chart.notifyDataSetChanged()
@@ -148,10 +144,8 @@ class ChartFragment : Fragment() {
 
         Repository.listSample.observe(viewLifecycleOwner) { list ->
             if (!holdMode) {
-                if (startRefTime == -1L) {
-                    val firstTimestamp = list[0].timestamp.time
-                    startRefTime = firstTimestamp - (firstTimestamp % 60)
-                }
+                val firstTimestamp = list[list.size - 1].timestamp.time
+
                 val listAccX = list.map { value -> value.accelX }
                 val listAccY = list.map { value -> value.accelY }
                 val listAccZ = list.map { value -> value.accelZ }
@@ -159,30 +153,32 @@ class ChartFragment : Fragment() {
 
                 val xvalues = ArrayList<Float>()
                 for (elem in list) {
-                    val floatTime = (elem.timestamp.time - startRefTime) / 1000f
+                    val floatTime = (elem.timestamp.time - firstTimestamp) / 1000f
                     xvalues.add(floatTime)
                 }
 
-                refreshChart(chartAccX, listAccX, xvalues)
-                refreshChart(chartAccY, listAccY, xvalues)
-                refreshChart(chartAccZ, listAccZ, xvalues)
-                refreshChart(chartGradiNord, listGradiNord, xvalues)
+                refreshChart(chartAccX, listAccX, xvalues, firstTimestamp)
+                refreshChart(chartAccY, listAccY, xvalues, firstTimestamp)
+                refreshChart(chartAccZ, listAccZ, xvalues, firstTimestamp)
+                refreshChart(chartGradiNord, listGradiNord, xvalues, firstTimestamp)
             }
         }
     }
 
-    inner class XAxisFormatter : ValueFormatter() {
-        override fun getAxisLabel(value: Float, axis: AxisBase?): String {
-            val timestamp = startRefTime + (value * 1000).toLong()
+    class XAxisFormatter(val firstTimestamp: Long) : ValueFormatter()
+    {
+        override fun getAxisLabel(value: Float, axis: AxisBase?): String
+        {
+            val timestamp = firstTimestamp + (value * 1000).toLong()
             val calendar = Calendar.getInstance()
-            calendar.setTime(Date(timestamp))
-            return "%02d:%02d".format(calendar.get(Calendar.MINUTE), calendar.get(Calendar.SECOND))
+            calendar.time = Date(timestamp)
+            val label = "%02d:%02d".format(calendar.get(Calendar.MINUTE), calendar.get(Calendar.SECOND))
+            return label
         }
     }
 
     override fun onStop() {
         super.onStop()
-        startRefTime = -1
     }
 
     private class GestureListener(val chart: LineChart):
@@ -192,14 +188,12 @@ class ChartFragment : Fragment() {
             me: MotionEvent?,
             lastPerformedGesture: ChartTouchListener.ChartGesture?
         ) {
-            Log.d("MYTAG","gesture start")
         }
 
         override fun onChartGestureEnd(
             me: MotionEvent?,
             lastPerformedGesture: ChartTouchListener.ChartGesture?
         ) {
-            Log.d("MYTAG","gesture stop")
         }
 
         override fun onChartLongPressed(me: MotionEvent?) {

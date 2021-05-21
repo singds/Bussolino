@@ -33,7 +33,7 @@
                 android:layout_marginStart="20dp"
                 app:layout_constraintBaseline_toBaselineOf="@+id/accValue"
                 app:layout_constraintStart_toStartOf="parent"
-                tools:text="@string/accel_x" />
+                tools:text="@string/accelerazione_x" />
 
             <TextView
                 android:id="@+id/accUdm"
