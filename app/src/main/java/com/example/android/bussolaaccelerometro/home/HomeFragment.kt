@@ -1,4 +1,4 @@
-package com.example.android.bussolaaccelerometro
+package com.example.android.bussolaaccelerometro.home
 
 import android.os.Bundle
 import androidx.fragment.app.Fragment
@@ -13,6 +13,7 @@ import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.constraintlayout.widget.ConstraintSet
 import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
+import com.example.android.bussolaaccelerometro.R
 import com.example.android.bussolaaccelerometro.databinding.CardAccelBinding
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 

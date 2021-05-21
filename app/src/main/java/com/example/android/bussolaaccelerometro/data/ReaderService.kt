@@ -1,4 +1,4 @@
-package com.example.android.bussolaaccelerometro
+package com.example.android.bussolaaccelerometro.data
 
 import android.app.*
 import android.content.Intent
@@ -11,6 +11,8 @@ import android.os.IBinder
 import android.util.Log
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.NotificationCompat
+import com.example.android.bussolaaccelerometro.home.MainActivity
+import com.example.android.bussolaaccelerometro.R
 import java.util.*
 import kotlin.math.PI
 import kotlin.math.atan2
@@ -70,7 +72,7 @@ class ReaderService : Service(),
     /**
      * La lista dello storico dei campioni
      */
-    private val sampleList = mutableListOf<Repository.SensorSample>()
+    private val sampleList = mutableListOf<SensorSample>()
 
     /**
      * Runnable eseguito ricorsivamente.
@@ -237,12 +239,12 @@ class ReaderService : Service(),
      *
      * @return un oggetto con i dati più recenti di ogni sensore.
      */
-    private fun getLastSample():Repository.SensorSample
+    private fun getLastSample(): SensorSample
     {
         val magnex = lastMagne[0]
         val magney = lastMagne[1]
 
-        return Repository.SensorSample(
+        return SensorSample(
                 getGradiNord(magnex, magney),
                 lastAccel[0],
                 lastAccel[1],

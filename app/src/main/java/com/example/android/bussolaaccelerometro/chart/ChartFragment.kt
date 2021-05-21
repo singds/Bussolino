@@ -1,4 +1,4 @@
-package com.example.android.bussolaaccelerometro
+package com.example.android.bussolaaccelerometro.chart
 
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -6,6 +6,11 @@ import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.viewModels
+import com.example.android.bussolaaccelerometro.R
+import com.example.android.bussolaaccelerometro.data.ReaderService
+import com.example.android.bussolaaccelerometro.data.Repository
+import com.example.android.bussolaaccelerometro.home.HomeViewModel
 import com.github.mikephil.charting.charts.LineChart
 import com.github.mikephil.charting.components.AxisBase
 import com.github.mikephil.charting.components.XAxis
@@ -22,6 +27,7 @@ import kotlin.collections.ArrayList
 
 
 class ChartFragment : Fragment() {
+    private val viewModel by viewModels<ChartViewModel>()
 
     lateinit var chartAccX:LineChart
     lateinit var chartAccY:LineChart
@@ -142,25 +148,27 @@ class ChartFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        Repository.listSample.observe(viewLifecycleOwner) { list ->
-            if (!holdMode) {
-                val firstTimestamp = list[list.size - 1].timestamp.time
+        viewModel.listSample.observe(viewLifecycleOwner) {
+            it?.let { list ->
+                if (!holdMode) {
+                    val firstTimestamp = list[list.size - 1].timestamp.time
 
-                val listAccX = list.map { value -> value.accelX }
-                val listAccY = list.map { value -> value.accelY }
-                val listAccZ = list.map { value -> value.accelZ }
-                val listGradiNord = list.map { value -> value.gradiNord }
+                    val listAccX = list.map { value -> value.accelX }
+                    val listAccY = list.map { value -> value.accelY }
+                    val listAccZ = list.map { value -> value.accelZ }
+                    val listGradiNord = list.map { value -> value.gradiNord }
 
-                val xvalues = ArrayList<Float>()
-                for (elem in list) {
-                    val floatTime = (elem.timestamp.time - firstTimestamp) / 1000f
-                    xvalues.add(floatTime)
+                    val xvalues = ArrayList<Float>()
+                    for (elem in list) {
+                        val floatTime = (elem.timestamp.time - firstTimestamp) / 1000f
+                        xvalues.add(floatTime)
+                    }
+
+                    refreshChart(chartAccX, listAccX, xvalues, firstTimestamp)
+                    refreshChart(chartAccY, listAccY, xvalues, firstTimestamp)
+                    refreshChart(chartAccZ, listAccZ, xvalues, firstTimestamp)
+                    refreshChart(chartGradiNord, listGradiNord, xvalues, firstTimestamp)
                 }
-
-                refreshChart(chartAccX, listAccX, xvalues, firstTimestamp)
-                refreshChart(chartAccY, listAccY, xvalues, firstTimestamp)
-                refreshChart(chartAccZ, listAccZ, xvalues, firstTimestamp)
-                refreshChart(chartGradiNord, listGradiNord, xvalues, firstTimestamp)
             }
         }
     }

@@ -1,8 +1,9 @@
-package com.example.android.bussolaaccelerometro
+package com.example.android.bussolaaccelerometro.home
 
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.Transformations
 import androidx.lifecycle.ViewModel
+import com.example.android.bussolaaccelerometro.data.Repository
 
 class HomeViewModel: ViewModel() {
 

@@ -1,4 +1,4 @@
-package com.example.android.bussolaaccelerometro
+package com.example.android.bussolaaccelerometro.home
 
 import android.app.NotificationChannel
 import android.app.NotificationManager
@@ -8,6 +8,9 @@ import android.content.SharedPreferences
 import android.os.Build
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
+import com.example.android.bussolaaccelerometro.R
+import com.example.android.bussolaaccelerometro.data.ReaderService
+import com.example.android.bussolaaccelerometro.data.Repository
 
 
 class MainActivity : AppCompatActivity()
@@ -45,7 +48,7 @@ class MainActivity : AppCompatActivity()
                 }
                 else -> {
                     val intentStop = Intent()
-                            .setClass(this,ReaderService::class.java)
+                            .setClass(this, ReaderService::class.java)
                    stopService(intentStop)
                 }
             }

@@ -12,11 +12,11 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.BussolaAccelerometro">
         <service
-            android:name=".ReaderService"
+            android:name=".data.ReaderService"
             android:enabled="true"
             android:exported="false"></service>
 
-        <activity android:name=".MainActivity">
+        <activity android:name=".home.MainActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
