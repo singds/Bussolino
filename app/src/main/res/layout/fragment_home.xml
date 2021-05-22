@@ -37,13 +37,13 @@
         layout="@layout/card_enable"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        app:layout_constraintBottom_toTopOf="@+id/chart"
+        app:layout_constraintBottom_toTopOf="@+id/fabChart"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/bussola" />
 
     <com.google.android.material.floatingactionbutton.FloatingActionButton
-        android:id="@+id/chart"
+        android:id="@+id/fabChart"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginBottom="16dp"

@@ -22,5 +22,8 @@ object Repository
      */
     var listSample = MutableLiveData<List<SensorSample>>()
 
-    val enableRecordInBackground = MutableLiveData<Boolean>()
+    /**
+     * True quando è abilitata la memorizzazione dei dati in background.
+     */
+    var enableRecordInBackground = false
 }

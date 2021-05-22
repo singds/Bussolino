@@ -17,7 +17,7 @@
             android:layout_height="match_parent">
 
             <ImageView
-                android:id="@+id/bussolaImg"
+                android:id="@+id/imgBussola"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="20dp"
@@ -29,7 +29,7 @@
                 app:layout_constraintTop_toTopOf="parent" />
 
             <TextView
-                android:id="@+id/gradiNord"
+                android:id="@+id/vGradiNord"
                 style="@style/txtAccel"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"

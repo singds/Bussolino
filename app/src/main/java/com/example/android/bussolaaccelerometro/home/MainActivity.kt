@@ -7,14 +7,23 @@ import android.content.Intent
 import android.content.SharedPreferences
 import android.os.Build
 import android.os.Bundle
+import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import com.example.android.bussolaaccelerometro.R
 import com.example.android.bussolaaccelerometro.data.ReaderService
 import com.example.android.bussolaaccelerometro.data.Repository
 
+/**
+ * L'applicazione è costituita da una singola activity e da più fragment.
+ * Ogni fragment realizza una pagina diversa.
+ * La maggior parte della UI è sviluppata nei fragment.
+ * L'activity si occupa di salvare e recuperare lo stato persistente dell'applicazione
+ * (memorizzato in [SharedPreferences]) e di creare il canale di notifica.
+ */
 class MainActivity : AppCompatActivity()
 {
     lateinit var preferences:SharedPreferences
+    private val viewModel by viewModels<MainActivityViewModel>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -36,15 +45,22 @@ class MainActivity : AppCompatActivity()
 
         // recupero lo stato persistente
         preferences = getPreferences(MODE_PRIVATE)
-        Repository.enableRecordInBackground.value = preferences.getBoolean(PREFERENCE_ENABLE_RECORD, false)
+        viewModel.enableRecordInBackground = preferences.getBoolean(PREFERENCE_ENABLE_RECORD, false)
     }
 
+    /**
+     * Non appena l'activity esce dallo stato foreground voglio interrompere subito il campionamento
+     * a meno che l'utente non abbia espressamente specificato di volerlo mantenere attivo.
+     */
     override fun onPause() {
         super.onPause()
 
-        // se sto soltanto cambiando configurazione non modifico lo stato del servizio
+        // Se sto soltanto cambiando configurazione (landscape / lingua) non modifico lo stato del
+        // servizio.
+        // Se l'utente sta chiudendo l'activity chiudo anche il servizio o lo predispongo per
+        // una continuativa esecuzione in background.
         if (!isChangingConfigurations) {
-            when (Repository.enableRecordInBackground.value) {
+            when (Repository.enableRecordInBackground) {
                 true -> {
                     val intentStartInBackground = Intent()
                             .setClass(this, ReaderService::class.java)
@@ -59,9 +75,9 @@ class MainActivity : AppCompatActivity()
             }
         }
 
-        // salvo lo stato persistente
+        // Salvo lo stato persistente
         preferences.edit()
-            .putBoolean(PREFERENCE_ENABLE_RECORD, Repository.enableRecordInBackground.value ?: false)
+            .putBoolean(PREFERENCE_ENABLE_RECORD, Repository.enableRecordInBackground)
             .apply()
     }
 
