@@ -66,14 +66,14 @@ class ReaderService : Service(),
      * Intervallo ammissibile [0-1].
      * Più basso il valore più pesante il filtro.
      */
-    private val pesoFiltroMagne = 0.1f
+    private val pesoFiltroMagne = 0.02f
 
     /**
      * Peso del filtro sulle componenti grezze dell'accelerometro.
      * Intervallo ammissibile [0-1].
      * Più basso il valore più pesante il filtro.
      */
-    private val pesoFiltroAccel = 0.3f
+    private val pesoFiltroAccel = 0.04f
 
     /**
      * Un Handler del main looper. Usato per mettere in esecuzione ad intervalli regolari il
@@ -128,7 +128,7 @@ class ReaderService : Service(),
         sensorMagnetometro = sensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD)
 
         // leggo i dati dei sensori con frequenza 10Hz
-        val usSamplingRate = 100 * 1000
+        val usSamplingRate = 10 * 1000
         sensorManager.registerListener(this, sensorMagnetometro, usSamplingRate)
         sensorManager.registerListener(this, sensorAccelerometro, usSamplingRate)
 
@@ -301,12 +301,12 @@ class ReaderService : Service(),
      * La misura dell'angolo del dispositivo rispetto al nord è l'angolo di cui bisogna ruotare il
      * dispositivo in senso antiorario affinchè il suo asse y sia diretto verso il nord magnetico.
      *
-     * @param magx la misura del campo magnetico lungo l'asse x del device (in uT).
-     * @param magx la misura del campo magnetico lungo l'asse y del device (in uT).
+     * @param magX la misura del campo magnetico lungo l'asse x del device (in uT).
+     * @param magY la misura del campo magnetico lungo l'asse y del device (in uT).
      * @return angolo fra asse y del dispositivo e nord magnetico
      */
-    private fun getGradiNord(magx: Float, magy: Float):Float {
-        return ((-atan2(magx, magy) * 180f / PI.toFloat()) + 360) % 360
+    private fun getGradiNord(magX: Float, magY: Float):Float {
+        return ((-atan2(magX, magY) * 180f / PI.toFloat()) + 360) % 360
     }
 
     companion object
