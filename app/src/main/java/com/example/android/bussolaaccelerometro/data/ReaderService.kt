@@ -163,7 +163,7 @@ class ReaderService : Service(),
 
                     // mi predispongo per l'esecuzione in background
                     val notification = NotificationCompat.Builder(this, MainActivity.ID_NOTIF_CH_MAIN)
-                            .setSmallIcon(R.drawable.ic_bussola)
+                            .setSmallIcon(R.drawable.ic_bussola_notification)
                             .setContentTitle(getString(R.string.monitoraggio_in_corso))
                             .setContentText(getString(R.string.bussolino_ti_sta_monitorando))
                             .setPriority(NotificationCompat.PRIORITY_LOW)
@@ -253,11 +253,11 @@ class ReaderService : Service(),
      */
     private fun getLastSample(): SensorSample
     {
-        val magnex = lastMagne[0]
-        val magney = lastMagne[1]
+        val magneX = lastMagne[0]
+        val magneY = lastMagne[1]
 
         return SensorSample(
-                getGradiNord(magnex, magney),
+                getGradiNord(magneX, magneY),
                 lastAccel[0],
                 lastAccel[1],
                 lastAccel[2],
