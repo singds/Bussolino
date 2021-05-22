@@ -22,6 +22,18 @@ import kotlin.math.atan2
  * Un service che raccoglie i dati dai sensori e li rende disponibili alle altre componenti
  * dell'app.
  *
+ * Il service è sempre attivo quando l'applicazione è in foreground.
+ * Se è abilitato il monitoraggio in background il service viene mantenuto attivo alla chiusura
+ * dell'applicazione. Il servizio vene messo nello stato foreground alla chiusura dell'activity.
+ * Questo comunicare ad andorid l'importanza del servizio evitando così che venga terminato.
+ *
+ * Services that have been running for a long time (such as 30 minutes or more) may be demoted in
+ * importance to allow their process to drop to the cached list.
+ * A cached process is one that is not currently needed, so the system is free to kill it.
+ * È facile che un processo nella cached list sia terminato quando l'utente apre diverse applicazioni.
+ * Per garantire che il mio service possa operare in background per lungo periodo devo metterlo
+ * nello stato foreground.
+ *
  * Il service stesso funge da target per le callback di notifica dei sensori.
  */
 class ReaderService : Service(),
