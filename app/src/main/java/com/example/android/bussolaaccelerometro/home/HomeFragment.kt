@@ -1,7 +1,6 @@
 package com.example.android.bussolaaccelerometro.home
 
 import android.os.Bundle
-import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.Surface
 import android.view.View
@@ -11,20 +10,24 @@ import android.widget.TextView
 import androidx.appcompat.widget.SwitchCompat
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.constraintlayout.widget.ConstraintSet
+import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
 import com.example.android.bussolaaccelerometro.R
+import com.example.android.bussolaaccelerometro.data.ReaderService
 import com.example.android.bussolaaccelerometro.databinding.CardAccelBinding
 import com.google.android.material.floatingactionbutton.FloatingActionButton
-import com.example.android.bussolaaccelerometro.data.ReaderService
 
 class HomeFragment : Fragment()
 {
     private val viewModel by viewModels<HomeViewModel>()
+    private lateinit var bindingAccX:CardAccelBinding
+    private lateinit var bindingAccY:CardAccelBinding
+    private lateinit var bindingAccZ:CardAccelBinding
 
     override fun onCreateView(
-        inflater: LayoutInflater, container: ViewGroup?,
-        savedInstanceState: Bundle?
+            inflater: LayoutInflater, container: ViewGroup?,
+            savedInstanceState: Bundle?
     ): View? {
         // Inflate the layout for this fragment
         return inflater.inflate(R.layout.fragment_home, container, false)
@@ -66,20 +69,31 @@ class HomeFragment : Fragment()
      * Creo le view per la visualizzazione delle accelerazioni in modo programmatico.
      * @param containerAcc il layout destinato a contenere i box delle accelerazioni.
      */
-    private fun addAccelerationBoxes(containerAcc:ConstraintLayout)
+    private fun addAccelerationBoxes(containerAcc: ConstraintLayout)
     {
         // Il layout è unico per tutte le accelerazioni.
         // Dopo aver creato ciascun box lo personalizzo gli assegno un identificatore.
         // L'identificatore è necessario per poter fare riferimento alla view nel ConstraintLayout
-        val bindingAccX = CardAccelBinding.inflate(layoutInflater)
-        bindingAccX.accLabel.text = getString(R.string.accelerazione_x)
-        bindingAccX.root.id = View.generateViewId()
-        val bindingAccY = CardAccelBinding.inflate(layoutInflater)
-        bindingAccY.accLabel.text = getString(R.string.accelerazione_y)
-        bindingAccY.root.id = View.generateViewId()
-        val bindingAccZ = CardAccelBinding.inflate(layoutInflater)
-        bindingAccZ.accLabel.text = getString(R.string.accelerazione_z)
-        bindingAccZ.root.id = View.generateViewId()
+        bindingAccX = CardAccelBinding.inflate(layoutInflater)
+                .apply {
+            accLabel.text = getString(R.string.accelerazione_x)
+            root.id = View.generateViewId()
+            accDirection.setImageResource(R.drawable.ic_arrow_x)
+        }
+
+        bindingAccY = CardAccelBinding.inflate(layoutInflater)
+                .apply {
+            accLabel.text = getString(R.string.accelerazione_y)
+            root.id = View.generateViewId()
+            accDirection.setImageResource(R.drawable.ic_arrow_y)
+        }
+
+        bindingAccZ = CardAccelBinding.inflate(layoutInflater)
+                .apply {
+            accLabel.text = getString(R.string.accelerazione_z)
+            root.id = View.generateViewId()
+            accDirection.setImageResource(R.drawable.ic_arrow_z)
+        }
 
 
         // Aggiungo le view all layout
@@ -113,9 +127,11 @@ class HomeFragment : Fragment()
         // Osservo le accelerazioni del model e aggiorno la grafica non appena cambiano.
         viewModel.accelX.observe(viewLifecycleOwner, { value ->
             bindingAccX.accValue.text = "%.2f".format(value)
+            bindingAccX.accDirection.rotation = -getAngoloImmagine(0).toFloat()
         })
         viewModel.accelY.observe(viewLifecycleOwner, { value ->
             bindingAccY.accValue.text = "%.2f".format(value)
+            bindingAccY.accDirection.rotation = -getAngoloImmagine(0).toFloat()
         })
         viewModel.accelZ.observe(viewLifecycleOwner, { value ->
             bindingAccZ.accValue.text = "%.2f".format(value)
@@ -134,7 +150,7 @@ class HomeFragment : Fragment()
      * dettagli sulla convenzione utilizzata per la misura dell'angolo vedere [ReaderService.getGradiNord].
      * @return Angolo da applicare all'immagine affinchè l'ago punti verso il nord magnetico.
      */
-    private fun getAngoloImmagine(angolo:Int): Int {
+    private fun getAngoloImmagine(angolo: Int): Int {
         view?.display?.apply {
             return when (rotation){
                 Surface.ROTATION_0 -> angolo

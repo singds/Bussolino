@@ -20,7 +20,10 @@
                 android:layout_marginEnd="16dp"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintTop_toTopOf="parent" />
+                app:layout_constraintTop_toTopOf="parent"
+                app:thumbTint="@color/switch_thumb"
+                app:trackTint="@color/switch_track"
+                tools:checked="true" />
 
             <TextView
                 android:id="@+id/textView"

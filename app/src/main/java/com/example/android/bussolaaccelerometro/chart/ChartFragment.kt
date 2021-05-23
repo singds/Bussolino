@@ -5,6 +5,7 @@ import android.view.LayoutInflater
 import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
+import androidx.core.content.ContextCompat.getColor
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import com.example.android.bussolaaccelerometro.R
@@ -93,7 +94,7 @@ class ChartFragment : Fragment() {
         dataSet.setDrawCircles(false)
         dataSet.setDrawValues(false)
         dataSet.lineWidth = lineWidth
-        dataSet.fillColor = 0x02dac5
+        dataSet.fillColor = getColor(requireContext(), R.color.chart_line)
         dataSet.setDrawFilled(fill)
         dataSet.setFillFormatter { _, _ -> 0f }
         val chartData = LineData(dataSet)

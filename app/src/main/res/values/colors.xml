@@ -1,10 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="purple_200">#FFBB86FC</color>
-    <color name="purple_500">#FF6200EE</color>
-    <color name="purple_700">#FF3700B3</color>
-    <color name="teal_200">#FF03DAC5</color>
-    <color name="teal_700">#FF018786</color>
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
+    <color name="background">#ffb0bec5</color>
+    <color name="fab">#ffef6c00</color>
+    <color name="chart_line">#ffef6c00</color>
+    <color name="switch_thumb">#ffef6c00</color>
+    <color name="switch_track">#60ef6c00</color>
+    <color name="primario">#ffb0bec5</color>
+    <color name="primario_1">#ff6d8f95</color>
+    <color name="secondario">#ffef6c00</color>
+    <color name="secondario_1">#ffb25100</color>
 </resources>
