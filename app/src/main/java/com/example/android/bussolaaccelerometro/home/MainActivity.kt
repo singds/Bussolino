@@ -12,6 +12,8 @@ import androidx.appcompat.app.AppCompatActivity
 import com.example.android.bussolaaccelerometro.R
 import com.example.android.bussolaaccelerometro.data.ReaderService
 import com.example.android.bussolaaccelerometro.data.Repository
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
+
 
 /**
  * L'applicazione è costituita da una singola activity e da più fragment.
@@ -46,6 +48,16 @@ class MainActivity : AppCompatActivity()
         // recupero lo stato persistente
         preferences = getPreferences(MODE_PRIVATE)
         viewModel.enableRecordInBackground = preferences.getBoolean(PREFERENCE_ENABLE_RECORD, false)
+        val firstStart = preferences.getBoolean(PREFERENCE_FIRST_START, true)
+
+        if (firstStart) {
+            MaterialAlertDialogBuilder(this)
+                    .setMessage(getString(R.string.puoi_abilitare_la_registrazione))
+                    .setPositiveButton(getString(R.string.ok)) { _, _ ->
+
+                    }
+                    .show()
+        }
     }
 
     /**
@@ -77,8 +89,9 @@ class MainActivity : AppCompatActivity()
 
         // Salvo lo stato persistente
         preferences.edit()
-            .putBoolean(PREFERENCE_ENABLE_RECORD, Repository.enableRecordInBackground)
-            .apply()
+                .putBoolean(PREFERENCE_ENABLE_RECORD, Repository.enableRecordInBackground)
+                .putBoolean(PREFERENCE_FIRST_START, false)
+                .apply()
     }
 
     /**
@@ -126,5 +139,6 @@ class MainActivity : AppCompatActivity()
         const val ID_NOTIF_READING = 1
 
         const val PREFERENCE_ENABLE_RECORD = "enableRecord"
+        const val PREFERENCE_FIRST_START = "firstStart"
     }
 }

@@ -11,4 +11,6 @@
     <color name="primario_1">#ff6d8f95</color>
     <color name="secondario">#ffef6c00</color>
     <color name="secondario_1">#ffb25100</color>
+    <color name="button_green">#ff46e686</color>
+    <color name="text_grey">#99000000</color>
 </resources>

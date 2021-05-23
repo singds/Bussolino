@@ -13,4 +13,6 @@
     <string name="monitoraggio_in_corso">Monitoraggio in corso</string>
     <string name="bussolino_ti_sta_monitorando">Bussolino ti sta tracciando !</string>
     <string name="registrazione_in_background">Registrazione in background</string>
+    <string name="ok">OK</string>
+    <string name="puoi_abilitare_la_registrazione">Quando vuoi puoi abilitare la registrazione in background.\nAttento ai consumi energetici !</string>
 </resources>
