@@ -48,7 +48,7 @@ class HomeFragment : Fragment()
 
         // Alla pressione del FAB apro la pagina dei grafici.
         fabChart.setOnClickListener {
-            findNavController().navigate(R.id.action_homeFragment_to_chartFragment)
+            viewModel.onClickChartButton()
         }
 
         // Osservo l'angolo rispetto al nord magnetico.
@@ -62,6 +62,16 @@ class HomeFragment : Fragment()
         switchAbilita.isChecked = viewModel.enableRecordInBackground
         switchAbilita.setOnCheckedChangeListener { _, isChecked ->
             viewModel.enableRecordInBackground = isChecked
+        }
+
+        viewModel.event.observe(viewLifecycleOwner) {
+            when(it) {
+                HomeViewModel.EVENT_GOTO_CHART_PAGE -> {
+                    findNavController().navigate(R.id.action_homeFragment_to_chartFragment)
+                }
+            }
+            if (it != null)
+                viewModel.eventHandled()
         }
     }
 
@@ -141,8 +151,8 @@ class HomeFragment : Fragment()
     /**
      * Determina l'angolo di cui deve essere ruotata l'immagine affinche la punta dell'ago
      * magnetico (dell'immagine) punti verso il nord magnetico.
-     * Per fare questo calcolo è necessario conoscere l'orientazione dell'interfaccia grafica
-     * rispetto all'orientazione naturale del dispositivo.
+     * Per fare questo calcolo è necessario conoscere l'orientamento dell'interfaccia grafica
+     * rispetto all'orientamento naturale del dispositivo.
      *
      * Angoli positivi fanno ruotare la view in senso orario.
      *

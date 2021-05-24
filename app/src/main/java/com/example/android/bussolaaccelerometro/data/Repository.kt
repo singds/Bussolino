@@ -27,5 +27,8 @@ object Repository
      */
     var enableRecordInBackground = false
 
+    /**
+     * True quando il dialog di informazione sull'esecuzione in background è stato confermato.
+     */
     var runInBackgroundAccepted = false
 }

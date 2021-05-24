@@ -16,7 +16,7 @@
             android:enabled="true"
             android:exported="false"></service>
 
-        <activity android:name=".home.MainActivity">
+        <activity android:name=".main.MainActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 

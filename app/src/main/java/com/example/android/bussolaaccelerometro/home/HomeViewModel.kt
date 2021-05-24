@@ -1,5 +1,7 @@
 package com.example.android.bussolaaccelerometro.home
 
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.Transformations
 import androidx.lifecycle.ViewModel
 import com.example.android.bussolaaccelerometro.data.Repository
@@ -20,4 +22,20 @@ class HomeViewModel: ViewModel()
      * ridiretto verso un campo di un'altra classe.
      */
     var enableRecordInBackground by Repository::enableRecordInBackground
+
+    private val pEvent = MutableLiveData<String?>()
+    val event:LiveData<String?> by ::pEvent
+
+    fun onClickChartButton() {
+        pEvent.value = EVENT_GOTO_CHART_PAGE
+    }
+
+    fun eventHandled() {
+        pEvent.value = null
+    }
+
+    companion object
+    {
+        const val EVENT_GOTO_CHART_PAGE = "eventGotoChartPage"
+    }
 }

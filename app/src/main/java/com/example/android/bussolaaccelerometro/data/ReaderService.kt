@@ -11,7 +11,7 @@ import android.os.IBinder
 import android.util.Log
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.NotificationCompat
-import com.example.android.bussolaaccelerometro.home.MainActivity
+import com.example.android.bussolaaccelerometro.main.MainActivity
 import com.example.android.bussolaaccelerometro.R
 import java.util.*
 import kotlin.math.PI

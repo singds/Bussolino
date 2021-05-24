@@ -1,4 +1,4 @@
-package com.example.android.bussolaaccelerometro.home
+package com.example.android.bussolaaccelerometro.main
 
 import android.app.NotificationChannel
 import android.app.NotificationManager
@@ -35,6 +35,12 @@ class MainActivity : AppCompatActivity()
         createNotificationChannel()
     }
 
+    /**
+     * Chiamato quando l'activity torna in foreground.
+     *
+     * Quando l'activity torna in foreground recupero lo stato persistente e rimetto in esecuzione
+     * il servizio di acquisizione dati.
+     */
     override fun onResume() {
         super.onResume()
 
@@ -50,12 +56,15 @@ class MainActivity : AppCompatActivity()
         viewModel.runInBackgroundAccepted = preferences.getBoolean(PREFERENCE_RUN_IN_BACKGROUND_ACCEPTED, false)
 
         // Solo al primo avvio mostro un dialog con informazioni sull'opzione run in background
-        //if (!viewModel.runInBackgroundAccepted)
+        if (!viewModel.runInBackgroundAccepted)
             showDialogRunInBackground ( )
     }
 
     /**
-     * Non appena l'activity esce dallo stato foreground voglio interrompere subito il campionamento
+     * Chiamato quando l'activity termina di essere il focus principale dell'utente.
+     * L'activity potrebbe restare ancora visibile dopo questo metodo.
+     *
+     * Non appena l'activity esce dallo stato foreground interrompo subito il campionamento
      * a meno che l'utente non abbia espressamente specificato di volerlo mantenere attivo.
      */
     override fun onPause() {
@@ -121,7 +130,8 @@ class MainActivity : AppCompatActivity()
     }
 
     /**
-     *
+     * Mostra un dialog che informa l'utente sulla possibilità di abilitare il campionamento
+     * in background. Il dialog deve essere confermato.
      */
     private fun showDialogRunInBackground() {
         MaterialAlertDialogBuilder(this)
@@ -137,16 +147,24 @@ class MainActivity : AppCompatActivity()
     companion object
     {
         /**
-         * L'id del notification channel principale (l'unico).
+         * Notification channel id: id del channel principale (l'unico).
          */
         const val ID_NOTIF_CH_MAIN = "NotifChMain"
 
         /**
-         * Id della notifica di app running in background.
+         * Notification id: id della notifica di app running in background.
          */
         const val ID_NOTIF_READING = 1
 
+        /**
+         * Shared Preference key: true quando il campionamento in background è abilitato.
+         */
         const val PREFERENCE_ENABLE_RECORD = "enableRecord"
+
+        /**
+         * Shared Preference key: true quando il popup di informazione sul campionamento in
+         * background è stato confermato.
+         */
         const val PREFERENCE_RUN_IN_BACKGROUND_ACCEPTED = "runInBackgroundAccepted"
     }
 }
