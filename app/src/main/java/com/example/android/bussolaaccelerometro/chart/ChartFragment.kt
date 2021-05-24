@@ -10,8 +10,6 @@ import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import com.example.android.bussolaaccelerometro.R
 import com.example.android.bussolaaccelerometro.data.ReaderService
-import com.example.android.bussolaaccelerometro.data.Repository
-import com.example.android.bussolaaccelerometro.home.HomeViewModel
 import com.github.mikephil.charting.charts.LineChart
 import com.github.mikephil.charting.components.AxisBase
 import com.github.mikephil.charting.components.XAxis
@@ -94,7 +92,8 @@ class ChartFragment : Fragment() {
         dataSet.setDrawCircles(false)
         dataSet.setDrawValues(false)
         dataSet.lineWidth = lineWidth
-        dataSet.fillColor = getColor(requireContext(), R.color.chart_line)
+        dataSet.color = getColor(requireContext(), R.color.chart_line)
+        dataSet.fillColor = getColor(requireContext(), R.color.chart_line_fill)
         dataSet.setDrawFilled(fill)
         dataSet.setFillFormatter { _, _ -> 0f }
         val chartData = LineData(dataSet)

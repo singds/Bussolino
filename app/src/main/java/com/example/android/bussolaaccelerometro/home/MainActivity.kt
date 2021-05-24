@@ -30,11 +30,6 @@ class MainActivity : AppCompatActivity()
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        // recupero lo stato persistente
-        preferences = getPreferences(MODE_PRIVATE)
-        viewModel.enableRecordInBackground = preferences.getBoolean(PREFERENCE_ENABLE_RECORD, false)
-        viewModel.runInBackgroundAccepted = preferences.getBoolean(PREFERENCE_RUN_IN_BACKGROUND_ACCEPTED, false)
-
         // Creo il canale di notifica.
         // Se il canale di notifica esiste già la creazione non ha alcun effetto.
         createNotificationChannel()
@@ -49,8 +44,13 @@ class MainActivity : AppCompatActivity()
             .setAction(ReaderService.ACTION_START)
         startService(intent)
 
+        // recupero lo stato persistente
+        preferences = getPreferences(MODE_PRIVATE)
+        viewModel.enableRecordInBackground = preferences.getBoolean(PREFERENCE_ENABLE_RECORD, false)
+        viewModel.runInBackgroundAccepted = preferences.getBoolean(PREFERENCE_RUN_IN_BACKGROUND_ACCEPTED, false)
+
         // Solo al primo avvio mostro un dialog con informazioni sull'opzione run in background
-        if (!viewModel.runInBackgroundAccepted)
+        //if (!viewModel.runInBackgroundAccepted)
             showDialogRunInBackground ( )
     }
 
