@@ -11,7 +11,6 @@ import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import com.example.android.bussolaaccelerometro.R
 import com.example.android.bussolaaccelerometro.data.ReaderService
-import com.example.android.bussolaaccelerometro.data.Repository
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 
 
@@ -31,6 +30,11 @@ class MainActivity : AppCompatActivity()
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
+        // recupero lo stato persistente
+        preferences = getPreferences(MODE_PRIVATE)
+        viewModel.enableRecordInBackground = preferences.getBoolean(PREFERENCE_ENABLE_RECORD, false)
+        viewModel.runInBackgroundAccepted = preferences.getBoolean(PREFERENCE_RUN_IN_BACKGROUND_ACCEPTED, false)
+
         // Creo il canale di notifica.
         // Se il canale di notifica esiste già la creazione non ha alcun effetto.
         createNotificationChannel()
@@ -45,19 +49,9 @@ class MainActivity : AppCompatActivity()
             .setAction(ReaderService.ACTION_START)
         startService(intent)
 
-        // recupero lo stato persistente
-        preferences = getPreferences(MODE_PRIVATE)
-        viewModel.enableRecordInBackground = preferences.getBoolean(PREFERENCE_ENABLE_RECORD, false)
-        val firstStart = preferences.getBoolean(PREFERENCE_FIRST_START, true)
-
-        if (firstStart) {
-            MaterialAlertDialogBuilder(this)
-                    .setMessage(getString(R.string.puoi_abilitare_la_registrazione))
-                    .setPositiveButton(getString(R.string.ok)) { _, _ ->
-
-                    }
-                    .show()
-        }
+        // Solo al primo avvio mostro un dialog con informazioni sull'opzione run in background
+        if (!viewModel.runInBackgroundAccepted)
+            showDialogRunInBackground ( )
     }
 
     /**
@@ -72,7 +66,7 @@ class MainActivity : AppCompatActivity()
         // Se l'utente sta chiudendo l'activity chiudo anche il servizio o lo predispongo per
         // una continuativa esecuzione in background.
         if (!isChangingConfigurations) {
-            when (Repository.enableRecordInBackground) {
+            when (viewModel.enableRecordInBackground) {
                 true -> {
                     val intentStartInBackground = Intent()
                             .setClass(this, ReaderService::class.java)
@@ -89,8 +83,8 @@ class MainActivity : AppCompatActivity()
 
         // Salvo lo stato persistente
         preferences.edit()
-                .putBoolean(PREFERENCE_ENABLE_RECORD, Repository.enableRecordInBackground)
-                .putBoolean(PREFERENCE_FIRST_START, false)
+                .putBoolean(PREFERENCE_ENABLE_RECORD, viewModel.enableRecordInBackground)
+                .putBoolean(PREFERENCE_RUN_IN_BACKGROUND_ACCEPTED, viewModel.runInBackgroundAccepted)
                 .apply()
     }
 
@@ -126,6 +120,20 @@ class MainActivity : AppCompatActivity()
         }
     }
 
+    /**
+     *
+     */
+    private fun showDialogRunInBackground() {
+        MaterialAlertDialogBuilder(this)
+                .setTitle(getString(R.string.informazione))
+                .setMessage(getString(R.string.puoi_abilitare_la_registrazione))
+                .setPositiveButton(getString(R.string.ok)) { _, _ ->
+                    viewModel.runInBackgroundAccepted = true
+                }
+                .setCancelable(false)
+                .show()
+    }
+
     companion object
     {
         /**
@@ -139,6 +147,6 @@ class MainActivity : AppCompatActivity()
         const val ID_NOTIF_READING = 1
 
         const val PREFERENCE_ENABLE_RECORD = "enableRecord"
-        const val PREFERENCE_FIRST_START = "firstStart"
+        const val PREFERENCE_RUN_IN_BACKGROUND_ACCEPTED = "runInBackgroundAccepted"
     }
 }

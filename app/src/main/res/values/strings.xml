@@ -14,5 +14,6 @@
     <string name="bussolino_ti_sta_monitorando">Bussolino ti sta tracciando !</string>
     <string name="registrazione_in_background">Registrazione in background</string>
     <string name="ok">OK</string>
-    <string name="puoi_abilitare_la_registrazione">Quando vuoi puoi abilitare la registrazione in background.\nAttento ai consumi energetici !</string>
+    <string name="puoi_abilitare_la_registrazione">Per continuare l\'acqusizione dati anche quando chiudi l\'app puoi abilitare l\'opzione corrispondente.\nSe lo fai potresti ridurre la durata della batteria.</string>
+    <string name="informazione">Informazione</string>
 </resources>

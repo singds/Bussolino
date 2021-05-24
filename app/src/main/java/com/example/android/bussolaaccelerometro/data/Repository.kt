@@ -26,4 +26,6 @@ object Repository
      * True quando è abilitata la memorizzazione dei dati in background.
      */
     var enableRecordInBackground = false
+
+    var runInBackgroundAccepted = false
 }
