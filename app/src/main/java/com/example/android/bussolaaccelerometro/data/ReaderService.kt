@@ -209,6 +209,13 @@ class ReaderService : Service(),
         return null
     }
 
+    override fun onTaskRemoved(rootIntent: Intent?) {
+        super.onTaskRemoved(rootIntent)
+        Log.d(LOG_TAG, "on task removed")
+
+        stopSelf()
+    }
+
     /**
      * Invocato dal sistema quando sono disponibili nuovi dati per accelerometro o magnetometro.
      * Quando ricevo nuovi dati filtro ogni componente e memorizzo i valori filtrati in campi

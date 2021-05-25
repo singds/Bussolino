@@ -75,19 +75,25 @@ class MainActivity : AppCompatActivity()
         // Se l'utente sta chiudendo l'activity chiudo anche il servizio o lo predispongo per
         // una continuativa esecuzione in background.
         if (!isChangingConfigurations) {
-            when (viewModel.enableRecordInBackground) {
-                true -> {
-                    val intentStartInBackground = Intent()
-                            .setClass(this, ReaderService::class.java)
-                            .setAction(ReaderService.ACTION_RUN_IN_BACKGROUND)
-                    startService(intentStartInBackground)
-                }
-                else -> {
-                    val intentStop = Intent()
-                            .setClass(this, ReaderService::class.java)
-                   stopService(intentStop)
-                }
-            }
+
+            val intentStartInBackground = Intent()
+                    .setClass(this, ReaderService::class.java)
+                    .setAction(ReaderService.ACTION_RUN_IN_BACKGROUND)
+            startService(intentStartInBackground)
+
+//            when (viewModel.enableRecordInBackground) {
+//                true -> {
+//                    val intentStartInBackground = Intent()
+//                            .setClass(this, ReaderService::class.java)
+//                            .setAction(ReaderService.ACTION_RUN_IN_BACKGROUND)
+//                    startService(intentStartInBackground)
+//                }
+//                else -> {
+//                    val intentStop = Intent()
+//                            .setClass(this, ReaderService::class.java)
+//                   stopService(intentStop)
+//                }
+//            }
         }
 
         // Salvo lo stato persistente
