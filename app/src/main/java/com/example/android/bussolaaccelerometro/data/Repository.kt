@@ -2,6 +2,7 @@ package com.example.android.bussolaaccelerometro.data
 
 import android.content.Context
 import android.content.SharedPreferences
+import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 
 /**
@@ -22,10 +23,38 @@ class Repository private constructor(context: Context)
     /**
      * True quando il dialog di informazione sull'esecuzione in background è stato confermato.
      */
-    var runInBackgroundAccepted get() = preferences.getBoolean(PREFERENCE_RUN_IN_BACKGROUND_ACCEPTED, false)
+    var dialogInfoDone get() = preferences.getBoolean(PREFERENCE_DIALOG_INFO_DONE, false)
         set(value) {
-            preferences.edit().putBoolean(PREFERENCE_RUN_IN_BACKGROUND_ACCEPTED, value).apply()
+            preferences.edit().putBoolean(PREFERENCE_DIALOG_INFO_DONE, value).apply()
         }
+
+
+    /**
+     * La lista dei campioni raccolti negli ultimi 5 minuti.
+     * Il primo elemento della lista è quello più recente.
+     */
+    private val values = mutableListOf<SensorSample>()
+    private var pListSample = MutableLiveData<List<SensorSample>>().apply { value = values }
+    val listSample:LiveData<List<SensorSample>> by ::pListSample
+
+    /**
+     * Acquisisce un nuovo campione e lo aggiunge alla lista dello storico dei campioni.
+     * La lista è una FIFO: ul primo campione ad entrare è il primo ad uscire.
+     * La lista raggiunge una dimensione che copre l'intervallo temporale di 5 minuti.
+     */
+    fun putSensorSampleToList(sample:SensorSample)
+    {
+        // rimuovo i campioni più vecchi
+        while (values.size >= NUM_CAMPIONI)
+            values.removeLast()
+
+        // aggiungo in testa il nuovo campione
+        values.add(0, sample)
+
+        // scateno una notifica degli osservatori
+        pListSample.value = values
+    }
+
 
     /**
      * L'ultimo campione acquisito aggiornato periodicamente con frequenza elevata.
@@ -34,13 +63,17 @@ class Repository private constructor(context: Context)
      * Ruotando in senso orario i gradi rispetto al nord aumentano da 0 a 360.
      * Asse y positivo del sistema di riferimento del dispositivo = ago magnetico.
      */
-    val currentSample = MutableLiveData<SensorSample>()
+    private val pCurrentSample = MutableLiveData<SensorSample>()
+    val currentSample:LiveData<SensorSample> by ::pCurrentSample
 
     /**
-     * La lista dei campioni raccolti negli ultimi 5 minuti.
-     * Il primo elemento della lista è quello più recente.
+     * Aggiorna l'ultimo campione acquisito dai sensori.
      */
-    var listSample = MutableLiveData<List<SensorSample>>()
+    fun putSensorSampleToCurrent(sample:SensorSample)
+    {
+        pCurrentSample.value = sample
+    }
+
 
     companion object
     {
@@ -53,7 +86,12 @@ class Repository private constructor(context: Context)
          * Shared Preference key: true quando il popup di informazione sul campionamento in
          * background è stato confermato.
          */
-        private const val PREFERENCE_RUN_IN_BACKGROUND_ACCEPTED = "runInBackgroundAccepted"
+        private const val PREFERENCE_DIALOG_INFO_DONE = "dialogInfoDone"
+
+        /**
+         * Numero di campioni che costituisce lo storico.
+         */
+        const val NUM_CAMPIONI = 600
 
 
         private var instance:Repository? = null

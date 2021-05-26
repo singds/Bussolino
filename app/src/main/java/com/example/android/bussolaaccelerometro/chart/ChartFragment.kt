@@ -99,7 +99,7 @@ class ChartFragment : Fragment() {
         lineWidth: Float = 1.3f
     ) {
         val arr = ArrayList<Entry>()
-        for (k in 0 until ReaderService.NUM_CAMPIONI)
+        for (k in 0 until Repository.NUM_CAMPIONI)
             arr.add(Entry(0f, 0f))
 
         val dataSet = LineDataSet(arr, label)

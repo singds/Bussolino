@@ -23,15 +23,28 @@ class HomeViewModel(private val repo:Repository): ViewModel()
 
     private val pEvent = MutableLiveData<String?>()
     val event:LiveData<String?> by ::pEvent
+    init {
+        if (!repo.dialogInfoDone)
+            pEvent.value = EVENT_SHOW_DIALOG_INFO
+    }
 
+    /**
+     * Chiamato dalla view quando viene premuto il FAB chart.
+     */
     fun onClickChartButton() {
         pEvent.value = EVENT_GOTO_CHART_PAGE
     }
 
-    fun onDialogInfoBackgoundOk() {
-        repo.enableRecordInBackground
+    /**
+     * Chiamato dalla view quando il dialog di informazione è stato confermato dall'utente.
+     */
+    fun onDialogInfoOk() {
+        repo.dialogInfoDone = true
     }
 
+    /**
+     * Chiamato dalla view per notificare il controller che l'evento / comando è stato gestito.
+     */
     fun eventHandled() {
         pEvent.value = null
     }
@@ -39,7 +52,7 @@ class HomeViewModel(private val repo:Repository): ViewModel()
     companion object
     {
         const val EVENT_GOTO_CHART_PAGE = "eventGotoChartPage"
-        const val EVENT_SHOW_DIALOG_INFO_BACKGROUND = "eventShowDialogInfoBackground"
+        const val EVENT_SHOW_DIALOG_INFO = "eventShowDialogInfo"
     }
 }
 

@@ -77,8 +77,8 @@ class HomeFragment : Fragment()
                 HomeViewModel.EVENT_GOTO_CHART_PAGE -> {
                     findNavController().navigate(R.id.action_homeFragment_to_chartFragment)
                 }
-                HomeViewModel.EVENT_SHOW_DIALOG_INFO_BACKGROUND -> {
-                    showDialogRunInBackground()
+                HomeViewModel.EVENT_SHOW_DIALOG_INFO -> {
+                    showDialogInfo()
                 }
             }
             if (it != null)
@@ -148,11 +148,19 @@ class HomeFragment : Fragment()
         // Osservo le accelerazioni del model e aggiorno la grafica non appena cambiano.
         viewModel.accelX.observe(viewLifecycleOwner, { value ->
             bindingAccX.accValue.text = "%.2f".format(value)
-            bindingAccX.accDirection.rotation = -getAngoloImmagine(0).toFloat()
+
+            // quando il dispositivo è ruotato rispetto al suo orientamento naturale devo aggiustare
+            // la rotazione delle freccette che indicano la direzione degli assi del device.
+            val angolo = -getAngoloImmagine(0).toFloat()
+            if (angolo != bindingAccX.accDirection.rotation)
+                bindingAccX.accDirection.rotation = angolo
         })
         viewModel.accelY.observe(viewLifecycleOwner, { value ->
             bindingAccY.accValue.text = "%.2f".format(value)
-            bindingAccY.accDirection.rotation = -getAngoloImmagine(0).toFloat()
+
+            val angolo = -getAngoloImmagine(0).toFloat()
+            if (angolo != bindingAccY.accDirection.rotation)
+                bindingAccY.accDirection.rotation = angolo
         })
         viewModel.accelZ.observe(viewLifecycleOwner, { value ->
             bindingAccZ.accValue.text = "%.2f".format(value)
@@ -188,13 +196,13 @@ class HomeFragment : Fragment()
      * Mostra un dialog che informa l'utente sulla possibilità di abilitare il campionamento
      * in background. Il dialog deve essere confermato.
      */
-    private fun showDialogRunInBackground() {
+    private fun showDialogInfo() {
         context?.let { context ->
             MaterialAlertDialogBuilder(context)
                     .setTitle(getString(R.string.informazione))
                     .setMessage(getString(R.string.puoi_abilitare_la_registrazione))
                     .setPositiveButton(getString(R.string.ok)) { _, _ ->
-                        viewModel.onDialogInfoBackgoundOk()
+                        viewModel.onDialogInfoOk()
                     }
                     .setCancelable(false)
                     .show()

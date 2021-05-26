@@ -76,20 +76,6 @@ class MainActivity : AppCompatActivity()
                     .setClass(this, ReaderService::class.java)
                     .setAction(ReaderService.ACTION_RUN_IN_BACKGROUND)
             startService(intentStartInBackground)
-
-//            when (viewModel.enableRecordInBackground) {
-//                true -> {
-//                    val intentStartInBackground = Intent()
-//                            .setClass(this, ReaderService::class.java)
-//                            .setAction(ReaderService.ACTION_RUN_IN_BACKGROUND)
-//                    startService(intentStartInBackground)
-//                }
-//                else -> {
-//                    val intentStop = Intent()
-//                            .setClass(this, ReaderService::class.java)
-//                   stopService(intentStop)
-//                }
-//            }
         }
     }
 

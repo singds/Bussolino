@@ -84,11 +84,6 @@ class ReaderService : Service(),
     private lateinit var handler:Handler
 
     /**
-     * La lista dello storico dei campioni
-     */
-    private val sampleList = mutableListOf<SensorSample>()
-
-    /**
      * Alla creazione mi predispongo a ricevere i dati dei sensori.
      */
     override fun onCreate() {
@@ -171,26 +166,9 @@ class ReaderService : Service(),
      */
     private val sampleTickRunnable = object :Runnable{
         override fun run() {
-            acquireSample()
+            repo.putSensorSampleToList(getLastSample())
             handler.postDelayed(this, MS_FRA_CAMPIONI.toLong())
         }
-    }
-
-    /**
-     * Acquisisce un nuovo campione e lo aggiunge alla lista dello storico dei campioni.
-     * La lista è una FIFO: ul primo campione ad entrare è il primo ad uscire.
-     * La lista raggiunge una dimensione che copre l'intervallo temporale di 5 minuti.
-     */
-    private fun acquireSample() {
-        // rimuovo i campioni più vecchi
-        while (sampleList.size >= NUM_CAMPIONI)
-            sampleList.removeLast()
-
-        // aggiungo in testa il nuovo campione
-        sampleList.add(0, getLastSample())
-
-        // scateno una notifica degli osservatori
-        repo.listSample.value = sampleList
     }
 
     /**
@@ -203,7 +181,6 @@ class ReaderService : Service(),
 
         handler.removeCallbacks(sampleTickRunnable)
         sensorManager.unregisterListener(this)
-        repo.listSample.value = null
     }
 
     /**
@@ -234,7 +211,7 @@ class ReaderService : Service(),
                 lastAccel[1] = filtroAccel(lastAccel[1], values[1])
                 lastAccel[2] = filtroAccel(lastAccel[2], values[2])
 
-                repo.currentSample.value = getLastSample()
+                repo.putSensorSampleToCurrent(getLastSample())
             }
             if (sensor.type == Sensor.TYPE_MAGNETIC_FIELD) {
                 lastMagne[0] = filtroMagne(lastMagne[0], values[0])
@@ -334,11 +311,6 @@ class ReaderService : Service(),
          * stato foreground.
          */
         const val ACTION_RUN_IN_BACKGROUND = "background"
-
-        /**
-         * Numero di campioni che costituisce lo storico.
-         */
-        const val NUM_CAMPIONI = 600
 
         /**
          * Intervallo di salvataggio dei campioni nello storico.
