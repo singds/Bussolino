@@ -1,10 +1,13 @@
 package com.example.android.bussolaaccelerometro.data
 
+import android.os.Parcelable
+import kotlinx.parcelize.Parcelize
 import java.util.*
 
 /**
  * Un classe che memorizza i dati di un campionamento.
  */
+@Parcelize
 data class SensorSample(
         /**
          * Angolo fra asse y del dispositivo e nord magnetico (in gradi).
@@ -30,4 +33,4 @@ data class SensorSample(
          * Istante temporale in cui il campione è stato acquisito.
          */
         val timestamp: Date
-)
+) : Parcelable

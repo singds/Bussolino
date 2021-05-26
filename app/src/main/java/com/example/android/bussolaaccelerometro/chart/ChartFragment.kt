@@ -16,6 +16,7 @@ import com.example.android.bussolaaccelerometro.data.SensorSample
 import com.github.mikephil.charting.charts.LineChart
 import com.github.mikephil.charting.components.AxisBase
 import com.github.mikephil.charting.components.XAxis
+import com.github.mikephil.charting.components.YAxis
 import com.github.mikephil.charting.data.Entry
 import com.github.mikephil.charting.data.LineData
 import com.github.mikephil.charting.data.LineDataSet
@@ -43,7 +44,7 @@ class ChartFragment : Fragment() {
     ): View? {
 
         val repo = Repository.getInstance(requireActivity().applicationContext)
-        val viewModelFactory = ChartViewModelFactory(repo)
+        val viewModelFactory = ChartViewModelFactory(repo, this)
         viewModel = ViewModelProvider(this,viewModelFactory).get(ChartViewModel::class.java)
 
         // Inflate the layout for this fragment
@@ -194,25 +195,27 @@ class ChartFragment : Fragment() {
         chart.invalidate()
     }
 
-    private fun setSensorSamplesInCharts(list:List<SensorSample>)
+    private fun setSensorSamplesInCharts(list:List<SensorSample>?)
     {
-        val oldestTimestamp = list[list.size - 1].timestamp.time
+        if (list != null) {
+            val oldestTimestamp = list[list.size - 1].timestamp.time
 
-        val listAccX = list.map { value -> value.accelX }
-        val listAccY = list.map { value -> value.accelY }
-        val listAccZ = list.map { value -> value.accelZ }
-        val listGradiNord = list.map { value -> value.gradiNord }
+            val listAccX = list.map { value -> value.accelX }
+            val listAccY = list.map { value -> value.accelY }
+            val listAccZ = list.map { value -> value.accelZ }
+            val listGradiNord = list.map { value -> value.gradiNord }
 
-        val xValues = ArrayList<Float>()
-        for (elem in list) {
-            val floatTime = (elem.timestamp.time - oldestTimestamp) / 1000f
-            xValues.add(floatTime)
+            val xValues = ArrayList<Float>()
+            for (elem in list) {
+                val floatTime = (elem.timestamp.time - oldestTimestamp) / 1000f
+                xValues.add(floatTime)
+            }
+
+            refreshChart(chartAccX, listAccX, xValues, oldestTimestamp)
+            refreshChart(chartAccY, listAccY, xValues, oldestTimestamp)
+            refreshChart(chartAccZ, listAccZ, xValues, oldestTimestamp)
+            refreshChart(chartGradiNord, listGradiNord, xValues, oldestTimestamp)
         }
-
-        refreshChart(chartAccX, listAccX, xValues, oldestTimestamp)
-        refreshChart(chartAccY, listAccY, xValues, oldestTimestamp)
-        refreshChart(chartAccZ, listAccZ, xValues, oldestTimestamp)
-        refreshChart(chartGradiNord, listGradiNord, xValues, oldestTimestamp)
     }
 
     class XAxisFormatter() : ValueFormatter()
@@ -233,122 +236,18 @@ class ChartFragment : Fragment() {
     }
 
 
-//    private class GestureListener(val chart: LineChart, val allCharts: List<LineChart>):
-//            OnChartGestureListener
-//    {
-//        override fun onChartGestureStart(
-//            me: MotionEvent?,
-//            lastPerformedGesture: ChartTouchListener.ChartGesture?
-//        ) {
-//        }
-//
-//        override fun onChartGestureEnd(
-//            me: MotionEvent?,
-//            lastPerformedGesture: ChartTouchListener.ChartGesture?
-//        ) {
-//        }
-//
-//        override fun onChartLongPressed(me: MotionEvent?) {
-//        }
-//
-//        override fun onChartDoubleTapped(me: MotionEvent?) {
-//
-//        }
-//
-//        override fun onChartSingleTapped(me: MotionEvent?) {
-//        }
-//
-//        override fun onChartFling(
-//            me1: MotionEvent?,
-//            me2: MotionEvent?,
-//            velocityX: Float,
-//            velocityY: Float
-//        ) {
-//        }
-//
-//        override fun onChartScale(me: MotionEvent?, scaleX: Float, scaleY: Float) {
-//            Log.d(LOG_TAG, "onChartScale  ${chart.toString()}")
-//
-//            allineaGrafici ( )
-//            for (c in allCharts) {
-//                setVisibilitaPunti(c)
-//            }
-//        }
-//
-//        override fun onChartTranslate(me: MotionEvent?, dX: Float, dY: Float) {
-//            Log.d(LOG_TAG, "onChartTranslate  ${chart.toString()}")
-//
-//            allineaGrafici()
-//        }
-//
-//        fun allineaGrafici()
-//        {
-//            val srcMatrix: Matrix
-//            val srcVals = FloatArray(9)
-//            var dstMatrix: Matrix
-//            val dstVals = FloatArray(9)
-//
-//            for (c in allCharts) {
-//                if (c != chart) {
-//                    // per interrompere l'eventuale scrolling in corso
-//                    val listener = c.onTouchListener as BarLineChartTouchListener
-//                    listener.stopDeceleration()
-//                }
-//            }
-//
-//            // get src chart translation matrix:
-//            srcMatrix = chart.getViewPortHandler().getMatrixTouch()
-//            srcMatrix.getValues(srcVals)
-//
-//            // apply X axis scaling and position to dst charts:
-//            for (dstChart in allCharts) {
-//                if (dstChart != chart) {
-//                    if (dstChart.visibility == View.VISIBLE) {
-//                        dstMatrix = dstChart.viewPortHandler.matrixTouch
-//                        dstMatrix.getValues(dstVals)
-//                        dstVals[Matrix.MSCALE_X] = srcVals[Matrix.MSCALE_X]
-//                        dstVals[Matrix.MTRANS_X] = srcVals[Matrix.MTRANS_X]
-//                        dstMatrix.setValues(dstVals)
-//                        dstChart.viewPortHandler.refresh(dstMatrix, dstChart, true)
-//                    }
-//                }
-//            }
-//        }
-//
-//        fun setVisibilitaPunti(c:LineChart) {
-//            val xMinSec = c.lowestVisibleX
-//            val xMaxSec = c.highestVisibleX
-//            // numero di secondi visibili a schermo
-//            val visibleSec = xMaxSec - xMinSec
-//            val dataSet = c.data.getDataSetByIndex(0) as LineDataSet
-//
-//            if (visibleSec < 10f) {
-//                dataSet.setDrawValues(true)
-//                dataSet.setDrawCircles(true)
-//            } else {
-//                dataSet.setDrawValues(false)
-//                dataSet.setDrawCircles(false)
-//            }
-//        }
-//
-//        companion object
-//        {
-//            const val LOG_TAG = "GestureListener"
-//        }
-//    }
-
     private class GestureListener(val chart: LineChart, val allCharts: List<LineChart>):
             OnChartGestureListener
     {
         override fun onChartGestureStart(
-                me: MotionEvent?,
-                lastPerformedGesture: ChartTouchListener.ChartGesture?
+            me: MotionEvent?,
+            lastPerformedGesture: ChartTouchListener.ChartGesture?
         ) {
         }
 
         override fun onChartGestureEnd(
-                me: MotionEvent?,
-                lastPerformedGesture: ChartTouchListener.ChartGesture?
+            me: MotionEvent?,
+            lastPerformedGesture: ChartTouchListener.ChartGesture?
         ) {
         }
 
@@ -363,26 +262,17 @@ class ChartFragment : Fragment() {
         }
 
         override fun onChartFling(
-                me1: MotionEvent?,
-                me2: MotionEvent?,
-                velocityX: Float,
-                velocityY: Float
+            me1: MotionEvent?,
+            me2: MotionEvent?,
+            velocityX: Float,
+            velocityY: Float
         ) {
         }
 
         override fun onChartScale(me: MotionEvent?, scaleX: Float, scaleY: Float) {
             Log.d(LOG_TAG, "onChartScale  ${chart.toString()}")
 
-            val lowestX = chart.lowestVisibleX
-            for (c in allCharts) {
-                if (c != chart) {
-                    // per interrompere l'eventuale scrolling in corso
-                    val listener = c.onTouchListener as BarLineChartTouchListener
-                    listener.stopDeceleration()
-                    c.viewPortHandler.setZoom(chart.scaleX, c.scaleY)
-                    c.invalidate()
-                }
-            }
+            setVisibilitaPunti(chart)
 
 //            allineaGrafici ( )
 //            for (c in allCharts) {
@@ -393,15 +283,7 @@ class ChartFragment : Fragment() {
         override fun onChartTranslate(me: MotionEvent?, dX: Float, dY: Float) {
             Log.d(LOG_TAG, "onChartTranslate  ${chart.toString()}")
 
-            val lowestX = chart.lowestVisibleX
-            for (c in allCharts) {
-                if (c != chart) {
-                    // per interrompere l'eventuale scrolling in corso
-                    val listener = c.onTouchListener as BarLineChartTouchListener
-                    listener.stopDeceleration()
-                    c.moveViewToX(lowestX)
-                }
-            }
+//            allineaGrafici()
         }
 
 //        fun allineaGrafici()
@@ -437,26 +319,28 @@ class ChartFragment : Fragment() {
 //                }
 //            }
 //        }
-//
-//        fun setVisibilitaPunti(c:LineChart) {
-//            val xMinSec = c.lowestVisibleX
-//            val xMaxSec = c.highestVisibleX
-//            // numero di secondi visibili a schermo
-//            val visibleSec = xMaxSec - xMinSec
-//            val dataSet = c.data.getDataSetByIndex(0) as LineDataSet
-//
-//            if (visibleSec < 10f) {
-//                dataSet.setDrawValues(true)
-//                dataSet.setDrawCircles(true)
-//            } else {
-//                dataSet.setDrawValues(false)
-//                dataSet.setDrawCircles(false)
-//            }
-//        }
+
+        fun setVisibilitaPunti(c:LineChart)
+        {
+            val xMinSec = c.lowestVisibleX
+            val xMaxSec = c.highestVisibleX
+            // numero di secondi visibili a schermo
+            val visibleSec = xMaxSec - xMinSec
+            val dataSet = c.data.getDataSetByIndex(0) as LineDataSet
+
+            if (visibleSec < 10f) {
+                dataSet.setDrawValues(true)
+                dataSet.setDrawCircles(true)
+            } else {
+                dataSet.setDrawValues(false)
+                dataSet.setDrawCircles(false)
+            }
+        }
 
         companion object
         {
             const val LOG_TAG = "GestureListener"
         }
     }
+
 }

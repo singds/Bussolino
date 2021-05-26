@@ -68,14 +68,14 @@ class ReaderService : Service(),
      * Intervallo ammissibile [0-1].
      * Più basso il valore più pesante il filtro.
      */
-    private val pesoFiltroMagne = 0.02f
+    private val pesoFiltroMagne = 0.04f
 
     /**
      * Peso del filtro sulle componenti grezze dell'accelerometro.
      * Intervallo ammissibile [0-1].
      * Più basso il valore più pesante il filtro.
      */
-    private val pesoFiltroAccel = 0.04f
+    private val pesoFiltroAccel = 0.08f
 
     /**
      * Un Handler del main looper. Usato per mettere in esecuzione ad intervalli regolari il
@@ -97,7 +97,7 @@ class ReaderService : Service(),
         sensorMagnetometro = sensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD)
 
         // leggo i dati dei sensori con frequenza 10Hz
-        val usSamplingRate = 10 * 1000
+        val usSamplingRate = 20 * 1000
         sensorManager.registerListener(this, sensorMagnetometro, usSamplingRate)
         sensorManager.registerListener(this, sensorAccelerometro, usSamplingRate)
 
