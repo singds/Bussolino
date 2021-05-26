@@ -10,8 +10,12 @@ import android.view.ViewGroup
 import androidx.core.content.ContextCompat.getColor
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
+import androidx.lifecycle.ViewModelProvider
 import com.example.android.bussolaaccelerometro.R
 import com.example.android.bussolaaccelerometro.data.ReaderService
+import com.example.android.bussolaaccelerometro.data.Repository
+import com.example.android.bussolaaccelerometro.home.HomeViewModel
+import com.example.android.bussolaaccelerometro.main.MainActivityViewModelFactory
 import com.github.mikephil.charting.charts.LineChart
 import com.github.mikephil.charting.components.AxisBase
 import com.github.mikephil.charting.components.XAxis
@@ -28,7 +32,8 @@ import kotlin.collections.ArrayList
 
 
 class ChartFragment : Fragment() {
-    private val viewModel by viewModels<ChartViewModel>()
+
+    lateinit var viewModel:ChartViewModel
 
     lateinit var chartAccX:LineChart
     lateinit var chartAccY:LineChart
@@ -36,10 +41,17 @@ class ChartFragment : Fragment() {
     lateinit var chartGradiNord:LineChart
     var holdMode = false
 
+
+
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
+
+        val repo = Repository.getInstance(requireActivity().applicationContext)
+        val viewModelFactory = ChartViewModelFactory(repo)
+        viewModel = ViewModelProvider(this,viewModelFactory).get(ChartViewModel::class.java)
+
         // Inflate the layout for this fragment
         val root = inflater.inflate(R.layout.fragment_chart, container, false)
 

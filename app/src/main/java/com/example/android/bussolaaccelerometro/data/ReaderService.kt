@@ -39,6 +39,8 @@ import kotlin.math.atan2
 class ReaderService : Service(),
         SensorEventListener
 {
+    private lateinit var repo:Repository
+
     private lateinit var sensorManager: SensorManager
 
     /**
@@ -87,41 +89,13 @@ class ReaderService : Service(),
     private val sampleList = mutableListOf<SensorSample>()
 
     /**
-     * Runnable eseguito ricorsivamente.
-     * Raccoglie i dati dei sensori 2 volte al secondo.
-     * Ogni campione è un oggetto che racchiude i dati di ogni sensore e il timestamp del
-     * campionamento.
-     */
-    private val sampleTickRunnable = object :Runnable{
-        override fun run() {
-            acquireSample()
-            handler.postDelayed(this, MS_FRA_CAMPIONI.toLong())
-        }
-    }
-
-    /**
-     * Acquisisce un nuovo campione e lo aggiunge alla lista dello storico dei campioni.
-     * La lista è una FIFO: ul primo campione ad entrare è il primo ad uscire.
-     * La lista raggiunge una dimensione che copre l'intervallo temporale di 5 minuti.
-     */
-    private fun acquireSample() {
-        // rimuovo i campioni più vecchi
-        while (sampleList.size >= NUM_CAMPIONI)
-            sampleList.removeLast()
-
-        // aggiungo in testa il nuovo campione
-        sampleList.add(0, getLastSample())
-
-        // scateno una notifica degli osservatori
-        Repository.listSample.value = sampleList
-    }
-
-    /**
      * Alla creazione mi predispongo a ricevere i dati dei sensori.
      */
     override fun onCreate() {
         super.onCreate()
         Log.d(LOG_TAG, "on create")
+
+        repo = Repository.getInstance(applicationContext)
 
         sensorManager = getSystemService(AppCompatActivity.SENSOR_SERVICE) as SensorManager
         sensorAccelerometro = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER)
@@ -190,6 +164,36 @@ class ReaderService : Service(),
     }
 
     /**
+     * Runnable eseguito ricorsivamente.
+     * Raccoglie i dati dei sensori 2 volte al secondo.
+     * Ogni campione è un oggetto che racchiude i dati di ogni sensore e il timestamp del
+     * campionamento.
+     */
+    private val sampleTickRunnable = object :Runnable{
+        override fun run() {
+            acquireSample()
+            handler.postDelayed(this, MS_FRA_CAMPIONI.toLong())
+        }
+    }
+
+    /**
+     * Acquisisce un nuovo campione e lo aggiunge alla lista dello storico dei campioni.
+     * La lista è una FIFO: ul primo campione ad entrare è il primo ad uscire.
+     * La lista raggiunge una dimensione che copre l'intervallo temporale di 5 minuti.
+     */
+    private fun acquireSample() {
+        // rimuovo i campioni più vecchi
+        while (sampleList.size >= NUM_CAMPIONI)
+            sampleList.removeLast()
+
+        // aggiungo in testa il nuovo campione
+        sampleList.add(0, getLastSample())
+
+        // scateno una notifica degli osservatori
+        repo.listSample.value = sampleList
+    }
+
+    /**
      * Alla distruzione disabilito il timer che campiona i sensori ad intervallo regolare e
      * de-registro tutti i listener dei sensori.
      */
@@ -199,7 +203,7 @@ class ReaderService : Service(),
 
         handler.removeCallbacks(sampleTickRunnable)
         sensorManager.unregisterListener(this)
-        Repository.listSample.value = null
+        repo.listSample.value = null
     }
 
     /**
@@ -230,7 +234,7 @@ class ReaderService : Service(),
                 lastAccel[1] = filtroAccel(lastAccel[1], values[1])
                 lastAccel[2] = filtroAccel(lastAccel[2], values[2])
 
-                Repository.currentSample.value = getLastSample()
+                repo.currentSample.value = getLastSample()
             }
             if (sensor.type == Sensor.TYPE_MAGNETIC_FIELD) {
                 lastMagne[0] = filtroMagne(lastMagne[0], values[0])

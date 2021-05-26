@@ -1,12 +1,32 @@
 package com.example.android.bussolaaccelerometro.data
 
+import android.content.Context
+import android.content.SharedPreferences
 import androidx.lifecycle.MutableLiveData
 
 /**
  *
  */
-object Repository
+class Repository private constructor(context: Context)
 {
+    private val preferences:SharedPreferences = context.getSharedPreferences("preferences", Context.MODE_PRIVATE)
+
+    /**
+     * True quando è abilitata la memorizzazione dei dati in background.
+     */
+    var enableRecordInBackground get() = preferences.getBoolean(PREFERENCE_ENABLE_RECORD, false)
+        set(value) {
+            preferences.edit().putBoolean(PREFERENCE_ENABLE_RECORD, value).apply()
+        }
+
+    /**
+     * True quando il dialog di informazione sull'esecuzione in background è stato confermato.
+     */
+    var runInBackgroundAccepted get() = preferences.getBoolean(PREFERENCE_RUN_IN_BACKGROUND_ACCEPTED, false)
+        set(value) {
+            preferences.edit().putBoolean(PREFERENCE_RUN_IN_BACKGROUND_ACCEPTED, value).apply()
+        }
+
     /**
      * L'ultimo campione acquisito aggiornato periodicamente con frequenza elevata.
      *
@@ -22,13 +42,33 @@ object Repository
      */
     var listSample = MutableLiveData<List<SensorSample>>()
 
-    /**
-     * True quando è abilitata la memorizzazione dei dati in background.
-     */
-    var enableRecordInBackground = false
+    companion object
+    {
+        /**
+         * Shared Preference key: true quando il campionamento in background è abilitato.
+         */
+        private const val PREFERENCE_ENABLE_RECORD = "enableRecord"
 
-    /**
-     * True quando il dialog di informazione sull'esecuzione in background è stato confermato.
-     */
-    var runInBackgroundAccepted = false
+        /**
+         * Shared Preference key: true quando il popup di informazione sul campionamento in
+         * background è stato confermato.
+         */
+        private const val PREFERENCE_RUN_IN_BACKGROUND_ACCEPTED = "runInBackgroundAccepted"
+
+
+        private var instance:Repository? = null
+
+
+        fun getInstance(context: Context):Repository
+        {
+            synchronized(this)
+            {
+                return instance?: {
+                    val newInstance = Repository(context)
+                    instance = newInstance
+                    newInstance
+                }()
+            }
+        }
+    }
 }

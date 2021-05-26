@@ -9,8 +9,10 @@ import android.os.Build
 import android.os.Bundle
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
+import androidx.lifecycle.ViewModelProvider
 import com.example.android.bussolaaccelerometro.R
 import com.example.android.bussolaaccelerometro.data.ReaderService
+import com.example.android.bussolaaccelerometro.data.Repository
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 
 
@@ -23,12 +25,15 @@ import com.google.android.material.dialog.MaterialAlertDialogBuilder
  */
 class MainActivity : AppCompatActivity()
 {
-    lateinit var preferences:SharedPreferences
-    private val viewModel by viewModels<MainActivityViewModel>()
+    private lateinit var viewModel:MainActivityViewModel
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+
+        val repo = Repository.getInstance(applicationContext)
+        val viewModelFactory = MainActivityViewModelFactory(repo)
+        viewModel = ViewModelProvider(this,viewModelFactory).get(MainActivityViewModel::class.java)
 
         // Creo il canale di notifica.
         // Se il canale di notifica esiste già la creazione non ha alcun effetto.
@@ -49,15 +54,6 @@ class MainActivity : AppCompatActivity()
             .setClass(this, ReaderService::class.java)
             .setAction(ReaderService.ACTION_START)
         startService(intent)
-
-        // recupero lo stato persistente
-        preferences = getPreferences(MODE_PRIVATE)
-        viewModel.enableRecordInBackground = preferences.getBoolean(PREFERENCE_ENABLE_RECORD, false)
-        viewModel.runInBackgroundAccepted = preferences.getBoolean(PREFERENCE_RUN_IN_BACKGROUND_ACCEPTED, false)
-
-        // Solo al primo avvio mostro un dialog con informazioni sull'opzione run in background
-        if (!viewModel.runInBackgroundAccepted)
-            showDialogRunInBackground ( )
     }
 
     /**
@@ -95,12 +91,6 @@ class MainActivity : AppCompatActivity()
 //                }
 //            }
         }
-
-        // Salvo lo stato persistente
-        preferences.edit()
-                .putBoolean(PREFERENCE_ENABLE_RECORD, viewModel.enableRecordInBackground)
-                .putBoolean(PREFERENCE_RUN_IN_BACKGROUND_ACCEPTED, viewModel.runInBackgroundAccepted)
-                .apply()
     }
 
     /**
@@ -135,21 +125,6 @@ class MainActivity : AppCompatActivity()
         }
     }
 
-    /**
-     * Mostra un dialog che informa l'utente sulla possibilità di abilitare il campionamento
-     * in background. Il dialog deve essere confermato.
-     */
-    private fun showDialogRunInBackground() {
-        MaterialAlertDialogBuilder(this)
-                .setTitle(getString(R.string.informazione))
-                .setMessage(getString(R.string.puoi_abilitare_la_registrazione))
-                .setPositiveButton(getString(R.string.ok)) { _, _ ->
-                    viewModel.runInBackgroundAccepted = true
-                }
-                .setCancelable(false)
-                .show()
-    }
-
     companion object
     {
         /**
@@ -161,16 +136,5 @@ class MainActivity : AppCompatActivity()
          * Notification id: id della notifica di app running in background.
          */
         const val ID_NOTIF_READING = 1
-
-        /**
-         * Shared Preference key: true quando il campionamento in background è abilitato.
-         */
-        const val PREFERENCE_ENABLE_RECORD = "enableRecord"
-
-        /**
-         * Shared Preference key: true quando il popup di informazione sul campionamento in
-         * background è stato confermato.
-         */
-        const val PREFERENCE_RUN_IN_BACKGROUND_ACCEPTED = "runInBackgroundAccepted"
     }
 }

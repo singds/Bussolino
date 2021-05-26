@@ -11,16 +11,19 @@ import androidx.appcompat.widget.SwitchCompat
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.constraintlayout.widget.ConstraintSet
 import androidx.fragment.app.Fragment
-import androidx.fragment.app.viewModels
+import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.fragment.findNavController
 import com.example.android.bussolaaccelerometro.R
 import com.example.android.bussolaaccelerometro.data.ReaderService
+import com.example.android.bussolaaccelerometro.data.Repository
 import com.example.android.bussolaaccelerometro.databinding.CardAccelBinding
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 
 class HomeFragment : Fragment()
 {
-    private val viewModel by viewModels<HomeViewModel>()
+    private lateinit var viewModel:HomeViewModel
+
     private lateinit var bindingAccX:CardAccelBinding
     private lateinit var bindingAccY:CardAccelBinding
     private lateinit var bindingAccZ:CardAccelBinding
@@ -29,6 +32,11 @@ class HomeFragment : Fragment()
             inflater: LayoutInflater, container: ViewGroup?,
             savedInstanceState: Bundle?
     ): View? {
+
+        val repo = Repository.getInstance(requireActivity().applicationContext)
+        val viewModelFactory = HomeViewModelFactory(repo)
+        viewModel = ViewModelProvider(this,viewModelFactory).get(HomeViewModel::class.java)
+
         // Inflate the layout for this fragment
         return inflater.inflate(R.layout.fragment_home, container, false)
     }
@@ -68,6 +76,9 @@ class HomeFragment : Fragment()
             when(it) {
                 HomeViewModel.EVENT_GOTO_CHART_PAGE -> {
                     findNavController().navigate(R.id.action_homeFragment_to_chartFragment)
+                }
+                HomeViewModel.EVENT_SHOW_DIALOG_INFO_BACKGROUND -> {
+                    showDialogRunInBackground()
                 }
             }
             if (it != null)
@@ -171,5 +182,22 @@ class HomeFragment : Fragment()
             }
         }
         return angolo;
+    }
+
+    /**
+     * Mostra un dialog che informa l'utente sulla possibilità di abilitare il campionamento
+     * in background. Il dialog deve essere confermato.
+     */
+    private fun showDialogRunInBackground() {
+        context?.let { context ->
+            MaterialAlertDialogBuilder(context)
+                    .setTitle(getString(R.string.informazione))
+                    .setMessage(getString(R.string.puoi_abilitare_la_registrazione))
+                    .setPositiveButton(getString(R.string.ok)) { _, _ ->
+                        viewModel.onDialogInfoBackgoundOk()
+                    }
+                    .setCancelable(false)
+                    .show()
+        }
     }
 }
