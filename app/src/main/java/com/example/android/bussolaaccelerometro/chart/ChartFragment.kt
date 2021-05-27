@@ -13,6 +13,7 @@ import androidx.lifecycle.ViewModelProvider
 import com.example.android.bussolaaccelerometro.R
 import com.example.android.bussolaaccelerometro.data.Repository
 import com.example.android.bussolaaccelerometro.data.SensorSample
+import com.example.android.bussolaaccelerometro.main.MyApplication
 import com.github.mikephil.charting.charts.LineChart
 import com.github.mikephil.charting.components.AxisBase
 import com.github.mikephil.charting.components.XAxis
@@ -43,7 +44,7 @@ class ChartFragment : Fragment() {
         savedInstanceState: Bundle?
     ): View? {
 
-        val repo = Repository.getInstance(requireActivity().applicationContext)
+        val repo = (requireActivity().application as MyApplication).repository
         val viewModelFactory = ChartViewModelFactory(repo, this)
         viewModel = ViewModelProvider(this,viewModelFactory).get(ChartViewModel::class.java)
 

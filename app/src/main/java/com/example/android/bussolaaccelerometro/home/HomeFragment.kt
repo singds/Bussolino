@@ -17,6 +17,7 @@ import com.example.android.bussolaaccelerometro.R
 import com.example.android.bussolaaccelerometro.data.ReaderService
 import com.example.android.bussolaaccelerometro.data.Repository
 import com.example.android.bussolaaccelerometro.databinding.CardAccelBinding
+import com.example.android.bussolaaccelerometro.main.MyApplication
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 
@@ -33,7 +34,7 @@ class HomeFragment : Fragment()
             savedInstanceState: Bundle?
     ): View? {
 
-        val repo = Repository.getInstance(requireActivity().applicationContext)
+        val repo = (requireActivity().application as MyApplication).repository
         val viewModelFactory = HomeViewModelFactory(repo)
         viewModel = ViewModelProvider(this,viewModelFactory).get(HomeViewModel::class.java)
 

@@ -7,13 +7,10 @@ import android.content.Intent
 import android.content.SharedPreferences
 import android.os.Build
 import android.os.Bundle
-import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.ViewModelProvider
 import com.example.android.bussolaaccelerometro.R
 import com.example.android.bussolaaccelerometro.data.ReaderService
-import com.example.android.bussolaaccelerometro.data.Repository
-import com.google.android.material.dialog.MaterialAlertDialogBuilder
 
 
 /**
@@ -31,7 +28,7 @@ class MainActivity : AppCompatActivity()
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        val repo = Repository.getInstance(applicationContext)
+        val repo = (application as MyApplication).repository
         val viewModelFactory = MainActivityViewModelFactory(repo)
         viewModel = ViewModelProvider(this,viewModelFactory).get(MainActivityViewModel::class.java)
 

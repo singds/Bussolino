@@ -8,7 +8,7 @@ import androidx.lifecycle.MutableLiveData
 /**
  *
  */
-class Repository private constructor(context: Context)
+class Repository (private val context: Context)
 {
     private val preferences:SharedPreferences = context.getSharedPreferences("preferences", Context.MODE_PRIVATE)
 
@@ -55,7 +55,6 @@ class Repository private constructor(context: Context)
         pListSample.value = values
     }
 
-
     /**
      * L'ultimo campione acquisito aggiornato periodicamente con frequenza elevata.
      *
@@ -92,21 +91,5 @@ class Repository private constructor(context: Context)
          * Numero di campioni che costituisce lo storico.
          */
         const val NUM_CAMPIONI = 600
-
-
-        private var instance:Repository? = null
-
-
-        fun getInstance(context: Context):Repository
-        {
-            synchronized(this)
-            {
-                return instance?: {
-                    val newInstance = Repository(context)
-                    instance = newInstance
-                    newInstance
-                }()
-            }
-        }
     }
 }

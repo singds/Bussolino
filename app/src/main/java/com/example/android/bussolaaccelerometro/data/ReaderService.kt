@@ -13,6 +13,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.NotificationCompat
 import com.example.android.bussolaaccelerometro.main.MainActivity
 import com.example.android.bussolaaccelerometro.R
+import com.example.android.bussolaaccelerometro.main.MyApplication
 import java.util.*
 import kotlin.math.PI
 import kotlin.math.atan2
@@ -90,7 +91,7 @@ class ReaderService : Service(),
         super.onCreate()
         Log.d(LOG_TAG, "on create")
 
-        repo = Repository.getInstance(applicationContext)
+        repo = (application as MyApplication).repository
 
         sensorManager = getSystemService(AppCompatActivity.SENSOR_SERVICE) as SensorManager
         sensorAccelerometro = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER)
