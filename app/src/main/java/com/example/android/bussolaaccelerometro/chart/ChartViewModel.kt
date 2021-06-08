@@ -14,11 +14,7 @@ class ChartViewModel(private val repo:Repository, private val state: SavedStateH
     private var pSampleListInPausa:ArrayList<SensorSample>? = state.get(STATE_SAMPLE_LIST_IN_PAUSA)
     val sampleListInPausa:List<SensorSample>? get() = pSampleListInPausa
 
-    val inPausa:LiveData<Boolean> = state.getLiveData(STATE_IN_PAUSA)
-    init {
-        if (inPausa.value == null)
-            state.set(STATE_IN_PAUSA, false)
-    }
+    val inPausa:LiveData<Boolean> = state.getLiveData(STATE_IN_PAUSA, false)
 
     fun onClickPlayPause() {
         listSample.value?.let { okList ->
@@ -49,12 +45,3 @@ class ChartViewModelFactory(
         throw IllegalArgumentException("Unknown ViewModel class")
     }
 }
-
-//class ChartViewModelFactory(private val repo:Repository, private val state: SavedStateHandle) : ViewModelProvider.Factory {
-//    override fun <T : ViewModel?> create(modelClass: Class<T>): T {
-//        if (modelClass.isAssignableFrom(ChartViewModel::class.java)) {
-//            return ChartViewModel(repo, state) as T
-//        }
-//        throw IllegalArgumentException("Unknown ViewModel class")
-//    }
-//}

@@ -34,7 +34,7 @@ class Repository (private val context: Context)
      * Il primo elemento della lista è quello più recente.
      */
     private val values = mutableListOf<SensorSample>()
-    private var pListSample = MutableLiveData<List<SensorSample>>().apply { value = values }
+    private var pListSample = MutableLiveData<List<SensorSample>>(values)
     val listSample:LiveData<List<SensorSample>> by ::pListSample
 
     /**
@@ -73,6 +73,15 @@ class Repository (private val context: Context)
         pCurrentSample.value = sample
     }
 
+    /**
+     * Elimina i dati in memoria nel repository.
+     */
+    fun clear()
+    {
+        values.clear()
+        // notifico gli osservatori
+        pListSample.value = values
+    }
 
     companion object
     {

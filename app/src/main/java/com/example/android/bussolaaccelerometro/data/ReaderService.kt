@@ -93,6 +93,12 @@ class ReaderService : Service(),
 
         repo = (application as MyApplication).repository
 
+        // L'oggetto Application può restare allocato anche quando nessuna componente dell'applicazione
+        // è attiva. Android decide quando fare pulizia ed eliminare l'istanza di Application.
+        // Quando l'applicazione viene avviata da 0 potrei trovare il repository allocato durante
+        // un avvio precedente dell'app. Quindi faccio pulizia dei dati nel repository.
+        repo.clear()
+
         sensorManager = getSystemService(AppCompatActivity.SENSOR_SERVICE) as SensorManager
         sensorAccelerometro = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER)
         sensorMagnetometro = sensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD)

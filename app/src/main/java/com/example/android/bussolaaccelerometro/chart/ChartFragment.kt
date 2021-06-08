@@ -275,33 +275,48 @@ class ChartFragment : Fragment() {
 
             setVisibilitaPunti(chart)
 
-//            allineaGrafici ( )
-//            for (c in allCharts) {
-//                setVisibilitaPunti(c)
-//            }
+            allineaGrafici ( )
+            for (c in allCharts) {
+                setVisibilitaPunti(c)
+            }
         }
 
         override fun onChartTranslate(me: MotionEvent?, dX: Float, dY: Float) {
             Log.d(LOG_TAG, "onChartTranslate  ${chart.toString()}")
 
-//            allineaGrafici()
+            allineaGrafici()
         }
 
-//        fun allineaGrafici()
-//        {
-//            val srcMatrix: Matrix
-//            val srcVals = FloatArray(9)
-//            var dstMatrix: Matrix
-//            val dstVals = FloatArray(9)
+        fun allineaGrafici()
+        {
+            val srcMatrix: Matrix
+            val srcVals = FloatArray(9)
+            var dstMatrix: Matrix
+            val dstVals = FloatArray(9)
+
+            for (c in allCharts) {
+                if (c != chart) {
+                    // per interrompere l'eventuale scrolling in corso
+                    val listener = c.onTouchListener as BarLineChartTouchListener
+                    listener.stopDeceleration()
+                }
+            }
+
+//            val xMin = chart.lowestVisibleX
+//            val xRange = chart.highestVisibleX - xMin
 //
-//            for (c in allCharts) {
-//                if (c != chart) {
-//                    // per interrompere l'eventuale scrolling in corso
-//                    val listener = c.onTouchListener as BarLineChartTouchListener
-//                    listener.stopDeceleration()
+//            for (dstChart in allCharts) {
+//                if (dstChart != chart) {
+//                    if (dstChart.visibility == View.VISIBLE) {
+//                        dstChart.setVisibleXRangeMaximum(xRange);
+//                        dstChart.fitScreen()
+//                        dstChart.moveViewToX(xMin)
+//                        dstChart.setVisibleXRangeMaximum(10000f)
+//                        dstChart.invalidate()
+//                    }
 //                }
 //            }
-//
+
 //            // get src chart translation matrix:
 //            srcMatrix = chart.getViewPortHandler().getMatrixTouch()
 //            srcMatrix.getValues(srcVals)
@@ -319,7 +334,7 @@ class ChartFragment : Fragment() {
 //                    }
 //                }
 //            }
-//        }
+        }
 
         fun setVisibilitaPunti(c:LineChart)
         {
