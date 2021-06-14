@@ -1,6 +1,7 @@
 package com.example.android.bussolaaccelerometro
 
 import com.github.mikephil.charting.charts.LineChart
+import com.github.mikephil.charting.data.LineDataSet
 import com.github.mikephil.charting.listener.BarLineChartTouchListener
 
 /**
@@ -22,20 +23,47 @@ fun LineChart.performTransformation() {
 }
 
 /**
- * Imposta la finestra visibile dell'asse x nel grafico.
+ * Imposta la finestra visibile dell'asse x.
+ * Poi aggiorna il grafico.
  * @param xMin minimo valore x visibile (estrema sinistra)
- * @param xMax massimo valore x visibile (estrema destra)
+ * @param xRange range di valori visibili sull'asse x.
  */
-fun LineChart.setVisibleXRange(xMin: Float, xMax: Float) {
-    val xMin = lowestVisibleX
-    val xRange = visibleXRange
+fun LineChart.setXMinMax(xMin: Float, xRange: Float) {
     val minScale = viewPortHandler.minScaleX
     val maxScale = viewPortHandler.maxScaleX
 
     setVisibleXRange(xRange, xRange)
     viewPortHandler.setMinimumScaleX(minScale)
     viewPortHandler.setMaximumScaleX(maxScale)
-//    setVisibleXRangeMinimum(0f)
-//    setVisibleXRangeMaximum(10000f)
-    moveViewToX(xMin)
+    refreshCircleVisibility()
+    moveViewToX(xMin) // questo aggiorna anche il grafico
+}
+
+/**
+ * Imposta la dimensione massima per la finestra visibile dell'asse x. Tutti i campioni saranno visibili.
+ * Poi aggiorna il grafico.
+ */
+fun LineChart.setXMinMaxFitScreen() {
+    fitScreen()
+    refreshCircleVisibility()
+    invalidate()
+}
+
+/**
+ * Abilita la visualizzazione di cerchietto e valore dei campioni quando il numero di
+ * secondi visibili sull'asse X è inferiore ad una certa soglia.
+ * @param dstChart chart di destinazione
+ */
+fun LineChart.refreshCircleVisibility() {
+    // numero di secondi visibili a schermo
+    val visibleSec = visibleXRange
+    val dataSet = data.getDataSetByIndex(0) as LineDataSet
+
+    if (visibleSec < 10f) {
+        dataSet.setDrawValues(true)
+        dataSet.setDrawCircles(true)
+    } else {
+        dataSet.setDrawValues(false)
+        dataSet.setDrawCircles(false)
+    }
 }

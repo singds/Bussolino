@@ -10,11 +10,7 @@ import android.view.ViewGroup
 import androidx.core.content.ContextCompat.getColor
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
-import com.example.android.bussolaaccelerometro.R
-import com.example.android.bussolaaccelerometro.SensorSample
-import com.example.android.bussolaaccelerometro.performTransformation
-import com.example.android.bussolaaccelerometro.stopAnimations
-import com.example.android.bussolaaccelerometro.MyApplication
+import com.example.android.bussolaaccelerometro.*
 import com.github.mikephil.charting.charts.LineChart
 import com.github.mikephil.charting.components.AxisBase
 import com.github.mikephil.charting.components.XAxis
@@ -37,6 +33,7 @@ class ChartFragment : Fragment() {
     lateinit var chartAccY: LineChart
     lateinit var chartAccZ: LineChart
     lateinit var chartGradiNord: LineChart
+    lateinit var allCharts: List<LineChart>
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -62,6 +59,7 @@ class ChartFragment : Fragment() {
         setupEmptyChart(chartAccZ, -12f, 12f, getString(R.string.accelerazione_z_udm))
         setupEmptyChart(chartGradiNord, 0f, 360f, getString(R.string.gradi_nord), false)
 
+        allCharts = listOf(chartAccX, chartAccY, chartAccZ, chartGradiNord)
 
         val accCharts = listOf(chartAccX, chartAccY, chartAccZ)
         for (chart in accCharts)
@@ -78,33 +76,56 @@ class ChartFragment : Fragment() {
 
 
         viewModel.listSample.observe(viewLifecycleOwner) { samples ->
-            if ((viewModel.inPausa.value == false) && (samples != null))
-                setSensorSamplesInCharts(samples)
+            samples?.let { okSamples ->
+                if (viewModel.inPausa.value == false) {
+                    setSensorSamplesInCharts(okSamples)
+                    for (chart in allCharts)
+                        chart.setXMinMaxFitScreen()
+                }
+            }
         }
 
-        val allCharts = listOf(chartAccX, chartAccY, chartAccZ, chartGradiNord)
         viewModel.inPausa.observe(viewLifecycleOwner) { inPausa ->
             when (inPausa) {
                 true -> {
-                    setSensorSamplesInCharts(viewModel.sampleListInPausa)
                     playPause.setImageResource(R.drawable.ic_play)
-                    for (c in allCharts) {
-                        c.isDragXEnabled = true
-                        c.isScaleXEnabled = true
+
+                    setSensorSamplesInCharts(viewModel.sampleListOnPause!!)
+                    for (k in allCharts.indices) {
+                        viewModel.chartsState?.let { states ->
+                            allCharts[k].setXMinMax(states[k].xMin, states[k].xRange)
+                        }
+                        if (viewModel.chartsState == null)
+                            allCharts[k].setXMinMaxFitScreen()
+
+                        allCharts[k].isDragXEnabled = true
+                        allCharts[k].isScaleXEnabled = true
                     }
                 }
                 else -> {
                     playPause.setImageResource(R.drawable.ic_pause)
-                    for (c in allCharts) {
-                        // per interrompere l'eventuale scrolling in corso
-                        val listener = c.onTouchListener as BarLineChartTouchListener
-                        listener.stopDeceleration()
-                        c.isDragXEnabled = false
-                        c.isScaleXEnabled = false
+
+                    // elimino lo stato dei grafici precedentemente salvato
+                    viewModel.saveChartsState(null)
+                    for (chart in allCharts) {
+                        chart.stopAnimations()
+                        chart.isDragXEnabled = false
+                        chart.isScaleXEnabled = false
                     }
                 }
             }
         }
+    }
+
+    /**
+     * Called when the Fragment is no longer resumed.
+     */
+    override fun onPause() {
+        super.onPause()
+        val states:MutableList<ChartViewModel.ChartState> = mutableListOf()
+        for (chart in allCharts)
+            states.add(ChartViewModel.ChartState(chart.lowestVisibleX, chart.visibleXRange))
+        viewModel.saveChartsState(states)
     }
 
     /**
@@ -172,13 +193,13 @@ class ChartFragment : Fragment() {
     }
 
     /**
-     * Rinfresca la visualizzazione del grafico con una nuova lista di valori.
-     * @param chart grafico da aggiornare
+     * Imposta la lista di punti visualizzata sul grafico.
+     * @param chart grafico da aggiornare.
      * @param yValues lista di coordinate y per i punti del grafico.
      * @param xTimes lista di coordinate x per i punti del grafico.
-     * @param oldestTimestamp timestamp del primo punto della lista
+     * @param oldestTimestamp timestamp del primo punto della lista.
      */
-    private fun refreshChart(
+    private fun setChartSamples(
         chart: LineChart,
         yValues: List<Float>,
         xTimes: List<Float>,
@@ -196,9 +217,6 @@ class ChartFragment : Fragment() {
         points.sortBy { it.x }
 
         dataSet.values = points
-        // Quando i grafici sono visualizzati dinamicamente nascondo i cerchietti dei campioni e il loro valore
-        dataSet.setDrawValues(false)
-        dataSet.setDrawCircles(false)
 
         // Aggiorno il timestamp di riferimento per l'asse x del grafico.
         // Questa libreria non accetta date o timestamp come tipo di dato per l'asse x.
@@ -206,34 +224,33 @@ class ChartFragment : Fragment() {
         val formatter = chart.xAxis.valueFormatter as XAxisFormatter
         formatter.oldestTimestamp = oldestTimestamp
 
-
         dataSet.notifyDataSetChanged()
         chartData.notifyDataChanged()
         chart.notifyDataSetChanged()
-        chart.fitScreen()
-        chart.invalidate()
     }
 
-    private fun setSensorSamplesInCharts(list: List<SensorSample>?) {
-        if (list != null) {
-            val oldestTimestamp = list[list.size - 1].timestamp.time
+    /**
+     * Visualizza sui grafici la lista di campioni fornita.
+     * @param list lista di campioni da visualizzare.
+     */
+    private fun setSensorSamplesInCharts(list: List<SensorSample>) {
+        val oldestTimestamp = list[list.size - 1].timestamp.time
 
-            val listAccX = list.map { value -> value.accelX }
-            val listAccY = list.map { value -> value.accelY }
-            val listAccZ = list.map { value -> value.accelZ }
-            val listGradiNord = list.map { value -> value.gradiNord }
+        val listAccX = list.map { value -> value.accelX }
+        val listAccY = list.map { value -> value.accelY }
+        val listAccZ = list.map { value -> value.accelZ }
+        val listGradiNord = list.map { value -> value.gradiNord }
 
-            val xValues = ArrayList<Float>()
-            for (elem in list) {
-                val floatTime = (elem.timestamp.time - oldestTimestamp) / 1000f
-                xValues.add(floatTime)
-            }
-
-            refreshChart(chartAccX, listAccX, xValues, oldestTimestamp)
-            refreshChart(chartAccY, listAccY, xValues, oldestTimestamp)
-            refreshChart(chartAccZ, listAccZ, xValues, oldestTimestamp)
-            refreshChart(chartGradiNord, listGradiNord, xValues, oldestTimestamp)
+        val xValues = ArrayList<Float>()
+        for (elem in list) {
+            val floatTime = (elem.timestamp.time - oldestTimestamp) / 1000f
+            xValues.add(floatTime)
         }
+
+        setChartSamples(chartAccX, listAccX, xValues, oldestTimestamp)
+        setChartSamples(chartAccY, listAccY, xValues, oldestTimestamp)
+        setChartSamples(chartAccZ, listAccZ, xValues, oldestTimestamp)
+        setChartSamples(chartGradiNord, listGradiNord, xValues, oldestTimestamp)
     }
 
     /**
@@ -267,7 +284,6 @@ class ChartFragment : Fragment() {
             return label
         }
     }
-
 
     /**
      * Un listener che intercetta le gesture del grafico.
@@ -346,7 +362,7 @@ class ChartFragment : Fragment() {
                 if (dstChart != chart) {
                     alignChart(dstChart, chart)
                 }
-                setCirclesVisibility(dstChart)
+                dstChart.refreshCircleVisibility()
             }
         }
 
@@ -376,25 +392,6 @@ class ChartFragment : Fragment() {
             dstVals[Matrix.MTRANS_X] = srcVals[Matrix.MTRANS_X]
             dstMatrix.setValues(dstVals)
             dstChart.viewPortHandler.refresh(dstMatrix, dstChart, true)
-        }
-
-        /**
-         * Abilita la visualizzazione di cerchietto e valore dei campioni quando il numero di
-         * secondi visibili sull'asse X è inferiore ad una certa soglia.
-         * @param dstChart chart di destinazione
-         */
-        private fun setCirclesVisibility(dstChart: LineChart) {
-            // numero di secondi visibili a schermo
-            val visibleSec = dstChart.visibleXRange
-            val dataSet = dstChart.data.getDataSetByIndex(0) as LineDataSet
-
-            if (visibleSec < 10f) {
-                dataSet.setDrawValues(true)
-                dataSet.setDrawCircles(true)
-            } else {
-                dataSet.setDrawValues(false)
-                dataSet.setDrawCircles(false)
-            }
         }
 
         companion object {
