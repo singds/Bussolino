@@ -6,8 +6,6 @@ import com.example.android.bussolaaccelerometro.data.Repository
 
 class MainActivityViewModel(private val repo:Repository):ViewModel()
 {
-    var enableRecordInBackground by repo::enableRecordInBackground
-    var dialogInfoDone by repo::dialogInfoDone
 }
 
 class MainActivityViewModelFactory(private val repo:Repository) : ViewModelProvider.Factory {

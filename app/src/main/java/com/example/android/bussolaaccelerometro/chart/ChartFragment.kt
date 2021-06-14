@@ -13,6 +13,8 @@ import androidx.lifecycle.ViewModelProvider
 import com.example.android.bussolaaccelerometro.R
 import com.example.android.bussolaaccelerometro.data.Repository
 import com.example.android.bussolaaccelerometro.data.SensorSample
+import com.example.android.bussolaaccelerometro.data.performTransformation
+import com.example.android.bussolaaccelerometro.data.stopAnimations
 import com.example.android.bussolaaccelerometro.main.MyApplication
 import com.github.mikephil.charting.charts.LineChart
 import com.github.mikephil.charting.components.AxisBase
@@ -28,82 +30,26 @@ import com.github.mikephil.charting.listener.OnChartGestureListener
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import java.util.*
 import kotlin.collections.ArrayList
+import kotlin.math.abs
 
 
 class ChartFragment : Fragment() {
+    lateinit var viewModel: ChartViewModel
 
-    lateinit var viewModel:ChartViewModel
-
-    lateinit var chartAccX:LineChart
-    lateinit var chartAccY:LineChart
-    lateinit var chartAccZ:LineChart
-    lateinit var chartGradiNord:LineChart
+    lateinit var chartAccX: LineChart
+    lateinit var chartAccY: LineChart
+    lateinit var chartAccZ: LineChart
+    lateinit var chartGradiNord: LineChart
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-
         val repo = (requireActivity().application as MyApplication).repository
         val viewModelFactory = ChartViewModelFactory(repo, this)
-        viewModel = ViewModelProvider(this,viewModelFactory).get(ChartViewModel::class.java)
+        viewModel = ViewModelProvider(this, viewModelFactory).get(ChartViewModel::class.java)
 
-        // Inflate the layout for this fragment
         return inflater.inflate(R.layout.fragment_chart, container, false)
-    }
-
-    private fun setupEmptyChart(
-        chart: LineChart,
-        min: Float,
-        max: Float,
-        label: String,
-        fill: Boolean = true,
-        lineWidth: Float = 1.3f
-    ) {
-
-        // Comincio con un dataset con un singolo valore (0,0)
-        val dataSet = LineDataSet(listOf(Entry(0f,0f)), label)
-        dataSet.setDrawCircles(false)
-        dataSet.setDrawValues(false)
-        dataSet.lineWidth = lineWidth
-        dataSet.color = getColor(requireContext(), R.color.chart_line)
-        dataSet.fillColor = getColor(requireContext(), R.color.chart_line_fill)
-        dataSet.setDrawFilled(fill)
-        // Modifico il filler in modo tale che il riempimento colorato sotto al grafico sia
-        // sempre compreso fra  y = 0 e y = valore del punto.
-        dataSet.setFillFormatter { _, _ -> 0f }
-
-        val chartData = LineData(dataSet)
-
-        chart.xAxis.apply {
-            // granularity garantisce una distanza minima fra due label lungo l'asse x
-            granularity = 1f
-            isGranularityEnabled = true
-            position = XAxis.XAxisPosition.BOTTOM
-            valueFormatter = XAxisFormatter()
-        }
-        chart.axisRight.isEnabled = false
-        chart.axisLeft.apply {
-            axisMaximum = max
-            axisMinimum = min
-        }
-
-//        chart.isDragDecelerationEnabled = false
-        chart.onChartGestureListener = GestureListener(chart, listOf(chartAccX, chartAccY, chartAccZ, chartGradiNord))
-        chart.description.isEnabled = false
-        chart.isHighlightPerDragEnabled = false
-        chart.isHighlightPerTapEnabled = false
-
-        chart.isDragXEnabled = false
-        chart.isScaleXEnabled = false
-        chart.isDragYEnabled = false
-        chart.isScaleYEnabled = false
-        chart.isDoubleTapToZoomEnabled = false
-        chart.setPinchZoom(false)
-
-
-        chart.data = chartData
-        chart.invalidate()
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -119,6 +65,12 @@ class ChartFragment : Fragment() {
         setupEmptyChart(chartAccZ, -12f, 12f, getString(R.string.accelerazione_z_udm))
         setupEmptyChart(chartGradiNord, 0f, 360f, getString(R.string.gradi_nord), false)
 
+        val accCharts = listOf(chartAccX, chartAccY, chartAccZ)
+        for (chart in accCharts)
+            chart.onChartGestureListener = ChartGestureListener(chart, accCharts)
+        chartGradiNord.onChartGestureListener =
+            ChartGestureListener(chartGradiNord, listOf(chartGradiNord))
+
         val playPause = view.findViewById<FloatingActionButton>(R.id.playPause)
         playPause.setOnClickListener {
             viewModel.onClickPlayPause()
@@ -133,10 +85,9 @@ class ChartFragment : Fragment() {
 
         val allCharts = listOf(chartAccX, chartAccY, chartAccZ, chartGradiNord)
         viewModel.inPausa.observe(viewLifecycleOwner) { inPausa ->
-            when(inPausa)
-            {
+            when (inPausa) {
                 true -> {
-                    setSensorSamplesInCharts (viewModel.sampleListInPausa)
+                    setSensorSamplesInCharts(viewModel.sampleListInPausa)
                     playPause.setImageResource(R.drawable.ic_play)
                     for (c in allCharts) {
                         c.isDragXEnabled = true
@@ -158,14 +109,82 @@ class ChartFragment : Fragment() {
     }
 
     /**
+     * Inizializza il chart e il suoi stile grafico.
+     * Aggiunge al chart un DataSet placeholder vuoto.
+     * @param chart il grafico da inizializzare
+     * @param yMin il minimo valore visibile sull'asse y
+     * @param yMax il massimo valore visibile sull'asse y
+     * @param label una breve descrizione dei dati visualizzati
+     * @param fill (default true) true per riempire con un colore chiaro la zona compresa fra la
+     * curva del grafico e l'asse x.
+     * @param lineWidth spessore della linea (1 = spessore di default)
+     */
+    private fun setupEmptyChart(
+        chart: LineChart,
+        yMin: Float,
+        yMax: Float,
+        label: String,
+        fill: Boolean = true,
+        lineWidth: Float = 1.3f
+    ) {
+
+        // Ogni grafico può visualizzare uno o più Dataset.
+        // Un DataSet incapsula un insieme di dati e diverse configurazioni per la loro visualizzazione.
+        // Creo un DataSet inizialmente vuoto per il grafico.
+        val dataSet = LineDataSet(listOf(Entry(0f, 0f)), label)
+        dataSet.setDrawCircles(false)
+        dataSet.setDrawValues(false)
+        dataSet.lineWidth = lineWidth
+        dataSet.color = getColor(requireContext(), R.color.chart_line)
+        dataSet.fillColor = getColor(requireContext(), R.color.chart_line_fill)
+        dataSet.setDrawFilled(fill)
+        if (fill) {
+            // Modifico il filler.
+            // La zona riempita sotto al grafico si estende così dalla linea della curva all'asse x.
+            dataSet.setFillFormatter { _, _ -> 0f }
+        }
+
+
+        chart.xAxis.apply {
+            // granularity = 1f garantisce che le label nell'asse x siano distanziate di almeno 1 sec
+            granularity = 1f
+            isGranularityEnabled = true
+            position = XAxis.XAxisPosition.BOTTOM
+            valueFormatter = XAxisFormatter()
+        }
+        chart.axisRight.isEnabled = false
+        chart.axisLeft.apply {
+            axisMaximum = yMax
+            axisMinimum = yMin
+        }
+        //chart.isDragDecelerationEnabled = false
+        chart.description.isEnabled = false
+        chart.isHighlightPerDragEnabled = false
+        chart.isHighlightPerTapEnabled = false
+        chart.isDragXEnabled = false
+        chart.isScaleXEnabled = false
+        chart.isDragYEnabled = false
+        chart.isScaleYEnabled = false
+        chart.isDoubleTapToZoomEnabled = false
+        chart.setPinchZoom(false)
+        chart.data = LineData(dataSet)
+
+        chart.invalidate()
+    }
+
+    /**
      * Rinfresca la visualizzazione del grafico con i nuovi valori forniti.
      * @param chart grafico da aggiornare
      * @param yValues lista di coordinate y per i punti del grafico.
      * @param xTimes lista di coordinate x per i punti del grafico.
      * @param oldestTimestamp timestamp
      */
-    private fun refreshChart(chart: LineChart, yValues: List<Float>, xTimes: List<Float>, oldestTimestamp:Long)
-    {
+    private fun refreshChart(
+        chart: LineChart,
+        yValues: List<Float>,
+        xTimes: List<Float>,
+        oldestTimestamp: Long
+    ) {
         // recuper i dati attualmente visualizzati nel grafico
         val chartData = chart.data
         val dataSet = chartData.getDataSetByIndex(0) as LineDataSet
@@ -196,8 +215,7 @@ class ChartFragment : Fragment() {
         chart.invalidate()
     }
 
-    private fun setSensorSamplesInCharts(list:List<SensorSample>?)
-    {
+    private fun setSensorSamplesInCharts(list: List<SensorSample>?) {
         if (list != null) {
             val oldestTimestamp = list[list.size - 1].timestamp.time
 
@@ -219,27 +237,39 @@ class ChartFragment : Fragment() {
         }
     }
 
-    class XAxisFormatter() : ValueFormatter()
-    {
-        var oldestTimestamp:Long = 0
+    /**
+     * Un formatter che restituisce le stringhe da visualizzare come label dell'asse x.
+     */
+    class XAxisFormatter : ValueFormatter() {
+        /**
+         * Il timestamp che corrisponde al valore 0 nell'asse x.
+         */
+        var oldestTimestamp: Long = 0
 
-        override fun getAxisLabel(value: Float, axis: AxisBase?): String
-        {
+        override fun getAxisLabel(value: Float, axis: AxisBase?): String {
             var label = ""
             if (oldestTimestamp != 0L) {
                 val timestamp = oldestTimestamp + (value * 1000).toLong()
                 val calendar = Calendar.getInstance()
                 calendar.time = Date(timestamp)
-                label = "%02d:%02d".format(calendar.get(Calendar.MINUTE), calendar.get(Calendar.SECOND))
+                label =
+                    "%02d:%02d".format(calendar.get(Calendar.MINUTE), calendar.get(Calendar.SECOND))
             }
             return label
         }
     }
 
 
-    private class GestureListener(val chart: LineChart, val allCharts: List<LineChart>):
-            OnChartGestureListener
-    {
+    /**
+     * Un listener che intercetta le gesture del grafico.
+     * Quando questo grafico viene zoomato o traslato la lista di grafici collegati subisce le stesse
+     * trasformazioni.
+     * @param chart il grafico a cui è collegato il listener. il grafico che subisce l'azione.
+     * @param relatedCharts la lista di grafici collegati. Quando *chart* subisce una trasformazione
+     * tutti i grafici di questa lista la subiscono a loro volta.
+     */
+    private class ChartGestureListener(val chart: LineChart, val relatedCharts: List<LineChart>) :
+        OnChartGestureListener {
         override fun onChartGestureStart(
             me: MotionEvent?,
             lastPerformedGesture: ChartTouchListener.ChartGesture?
@@ -256,7 +286,6 @@ class ChartFragment : Fragment() {
         }
 
         override fun onChartDoubleTapped(me: MotionEvent?) {
-
         }
 
         override fun onChartSingleTapped(me: MotionEvent?) {
@@ -270,87 +299,50 @@ class ChartFragment : Fragment() {
         ) {
         }
 
-        fun performChartTransformation()
-        {
-            val listener = chart.onTouchListener as BarLineChartTouchListener
-            chart.viewPortHandler.refresh(listener.matrix, chart, false);
-        }
-
         override fun onChartScale(me: MotionEvent?, scaleX: Float, scaleY: Float) {
             Log.d(LOG_TAG, "onChartScale  ${chart.toString()}")
-
-            performChartTransformation()
-            setVisibilitaPunti(chart)
-
-            allineaGrafici ( )
-            for (c in allCharts) {
-                setVisibilitaPunti(c)
-            }
+            alignChartsAndSetCirclesVisibility()
         }
 
         override fun onChartTranslate(me: MotionEvent?, dX: Float, dY: Float) {
             Log.d(LOG_TAG, "onChartTranslate  ${chart.toString()}")
-
-            performChartTransformation()
-            allineaGrafici()
+            alignChartsAndSetCirclesVisibility()
         }
 
-        fun allineaGrafici()
-        {
-            val srcMatrix: Matrix
+        private fun alignChartsAndSetCirclesVisibility() {
+            chart.performTransformation()
+            for (dstChart in relatedCharts) {
+                if (dstChart != chart) {
+                    alignChart(dstChart, chart)
+                }
+                setCirclesVisibility(dstChart)
+            }
+        }
+
+        private fun alignChart(dstChart: LineChart, srcChart: LineChart) {
+            dstChart.stopAnimations()
+
             val srcVals = FloatArray(9)
-            var dstMatrix: Matrix
             val dstVals = FloatArray(9)
 
-            for (c in allCharts) {
-                if (c != chart) {
-                    // per interrompere l'eventuale scrolling in corso
-                    val listener = c.onTouchListener as BarLineChartTouchListener
-                    listener.stopDeceleration()
-                }
-            }
+            // get src chart translation matrix:
+            val srcMatrix: Matrix = chart.viewPortHandler.matrixTouch
+            srcMatrix.getValues(srcVals)
 
-            val xMin = chart.lowestVisibleX
-            val xRange = chart.highestVisibleX - xMin
-            Log.d(LOG_TAG,"xMin = ${xMin}, xRange=${xRange}")
+            // apply X axis scaling and position to dst charts:
+            var dstMatrix: Matrix = dstChart.viewPortHandler.matrixTouch
+            dstMatrix.getValues(dstVals)
 
-            for (dstChart in allCharts) {
-                if (dstChart != chart) {
-                    if (dstChart.visibility == View.VISIBLE) {
-                        dstChart.setVisibleXRange(xRange,xRange + 0.001f)
-                        dstChart.setVisibleXRangeMinimum(0f)
-                        dstChart.setVisibleXRangeMaximum(10000f)
-                        dstChart.moveViewToX(xMin)
-                    }
-                }
-            }
-
-//            // get src chart translation matrix:
-//            srcMatrix = chart.getViewPortHandler().getMatrixTouch()
-//            srcMatrix.getValues(srcVals)
-//
-//            // apply X axis scaling and position to dst charts:
-//            for (dstChart in allCharts) {
-//                if (dstChart != chart) {
-//                    if (dstChart.visibility == View.VISIBLE) {
-//                        dstMatrix = dstChart.viewPortHandler.matrixTouch
-//                        dstMatrix.getValues(dstVals)
-//                        dstVals[Matrix.MSCALE_X] = srcVals[Matrix.MSCALE_X]
-//                        dstVals[Matrix.MTRANS_X] = srcVals[Matrix.MTRANS_X]
-//                        dstMatrix.setValues(dstVals)
-//                        dstChart.viewPortHandler.refresh(dstMatrix, dstChart, true)
-//                    }
-//                }
-//            }
+            dstVals[Matrix.MSCALE_X] = srcVals[Matrix.MSCALE_X]
+            dstVals[Matrix.MTRANS_X] = srcVals[Matrix.MTRANS_X]
+            dstMatrix.setValues(dstVals)
+            dstChart.viewPortHandler.refresh(dstMatrix, dstChart, true)
         }
 
-        fun setVisibilitaPunti(c:LineChart)
-        {
-            val xMinSec = c.lowestVisibleX
-            val xMaxSec = c.highestVisibleX
+        fun setCirclesVisibility(dstChart: LineChart) {
             // numero di secondi visibili a schermo
-            val visibleSec = xMaxSec - xMinSec
-            val dataSet = c.data.getDataSetByIndex(0) as LineDataSet
+            val visibleSec = dstChart.visibleXRange
+            val dataSet = dstChart.data.getDataSetByIndex(0) as LineDataSet
 
             if (visibleSec < 10f) {
                 dataSet.setDrawValues(true)
@@ -361,8 +353,7 @@ class ChartFragment : Fragment() {
             }
         }
 
-        companion object
-        {
+        companion object {
             const val LOG_TAG = "GestureListener"
         }
     }

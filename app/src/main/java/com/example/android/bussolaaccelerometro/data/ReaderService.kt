@@ -97,7 +97,7 @@ class ReaderService : Service(),
         // è attiva. Android decide quando fare pulizia ed eliminare l'istanza di Application.
         // Quando l'applicazione viene avviata da 0 potrei trovare il repository allocato durante
         // un avvio precedente dell'app. Quindi faccio pulizia dei dati nel repository.
-        repo.clear()
+        repo.clearSampleList()
 
         sensorManager = getSystemService(AppCompatActivity.SENSOR_SERVICE) as SensorManager
         sensorAccelerometro = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER)

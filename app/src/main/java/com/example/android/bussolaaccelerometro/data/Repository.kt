@@ -76,7 +76,7 @@ class Repository (private val context: Context)
     /**
      * Elimina i dati in memoria nel repository.
      */
-    fun clear()
+    fun clearSampleList()
     {
         values.clear()
         // notifico gli osservatori
