@@ -1,11 +1,10 @@
-package com.example.android.bussolaaccelerometro.home
+package com.example.android.bussolaaccelerometro.fragmentHome
 
 import androidx.lifecycle.*
-import com.example.android.bussolaaccelerometro.data.Repository
-import com.example.android.bussolaaccelerometro.main.MainActivityViewModel
+import com.example.android.bussolaaccelerometro.Repository
 import kotlin.math.roundToInt
 
-class HomeViewModel(private val repo:Repository): ViewModel()
+class HomeViewModel(private val repo: Repository): ViewModel()
 {
     // Estraggo le singole componenti dal campione più recente predisponendo dei campi
     // comodamente utilizzabili dalla UI.
@@ -56,7 +55,7 @@ class HomeViewModel(private val repo:Repository): ViewModel()
     }
 }
 
-class HomeViewModelFactory(private val repo:Repository) : ViewModelProvider.Factory {
+class HomeViewModelFactory(private val repo: Repository) : ViewModelProvider.Factory {
     override fun <T : ViewModel?> create(modelClass: Class<T>): T {
         if (modelClass.isAssignableFrom(HomeViewModel::class.java)) {
             return HomeViewModel(repo) as T

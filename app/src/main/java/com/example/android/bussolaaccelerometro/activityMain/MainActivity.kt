@@ -1,4 +1,4 @@
-package com.example.android.bussolaaccelerometro.main
+package com.example.android.bussolaaccelerometro.activityMain
 
 import android.app.NotificationChannel
 import android.app.NotificationManager
@@ -9,8 +9,9 @@ import android.os.Build
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.ViewModelProvider
+import com.example.android.bussolaaccelerometro.MyApplication
 import com.example.android.bussolaaccelerometro.R
-import com.example.android.bussolaaccelerometro.data.ReaderService
+import com.example.android.bussolaaccelerometro.ReaderService
 
 
 /**

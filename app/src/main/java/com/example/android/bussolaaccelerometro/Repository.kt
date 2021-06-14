@@ -1,4 +1,4 @@
-package com.example.android.bussolaaccelerometro.data
+package com.example.android.bussolaaccelerometro
 
 import android.content.Context
 import android.content.SharedPreferences
@@ -42,7 +42,7 @@ class Repository (private val context: Context)
      * La lista è una FIFO: ul primo campione ad entrare è il primo ad uscire.
      * La lista raggiunge una dimensione che copre l'intervallo temporale di 5 minuti.
      */
-    fun putSensorSampleToList(sample:SensorSample)
+    fun putSensorSampleToList(sample: SensorSample)
     {
         // rimuovo i campioni più vecchi
         while (values.size >= NUM_CAMPIONI)
@@ -68,7 +68,7 @@ class Repository (private val context: Context)
     /**
      * Aggiorna l'ultimo campione acquisito dai sensori.
      */
-    fun putSensorSampleToCurrent(sample:SensorSample)
+    fun putSensorSampleToCurrent(sample: SensorSample)
     {
         pCurrentSample.value = sample
     }

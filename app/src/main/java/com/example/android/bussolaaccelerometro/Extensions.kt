@@ -1,4 +1,4 @@
-package com.example.android.bussolaaccelerometro.data
+package com.example.android.bussolaaccelerometro
 
 import com.github.mikephil.charting.charts.LineChart
 import com.github.mikephil.charting.listener.BarLineChartTouchListener

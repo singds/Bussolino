@@ -1,4 +1,4 @@
-package com.example.android.bussolaaccelerometro.data
+package com.example.android.bussolaaccelerometro
 
 import android.app.*
 import android.content.Intent
@@ -11,9 +11,7 @@ import android.os.IBinder
 import android.util.Log
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.NotificationCompat
-import com.example.android.bussolaaccelerometro.main.MainActivity
-import com.example.android.bussolaaccelerometro.R
-import com.example.android.bussolaaccelerometro.main.MyApplication
+import com.example.android.bussolaaccelerometro.activityMain.MainActivity
 import java.util.*
 import kotlin.math.PI
 import kotlin.math.atan2
@@ -40,7 +38,7 @@ import kotlin.math.atan2
 class ReaderService : Service(),
         SensorEventListener
 {
-    private lateinit var repo:Repository
+    private lateinit var repo: Repository
 
     private lateinit var sensorManager: SensorManager
 

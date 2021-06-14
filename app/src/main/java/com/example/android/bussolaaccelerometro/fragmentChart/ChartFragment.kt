@@ -1,4 +1,4 @@
-package com.example.android.bussolaaccelerometro.chart
+package com.example.android.bussolaaccelerometro.fragmentChart
 
 import android.graphics.Matrix
 import android.os.Bundle
@@ -11,15 +11,13 @@ import androidx.core.content.ContextCompat.getColor
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
 import com.example.android.bussolaaccelerometro.R
-import com.example.android.bussolaaccelerometro.data.Repository
-import com.example.android.bussolaaccelerometro.data.SensorSample
-import com.example.android.bussolaaccelerometro.data.performTransformation
-import com.example.android.bussolaaccelerometro.data.stopAnimations
-import com.example.android.bussolaaccelerometro.main.MyApplication
+import com.example.android.bussolaaccelerometro.SensorSample
+import com.example.android.bussolaaccelerometro.performTransformation
+import com.example.android.bussolaaccelerometro.stopAnimations
+import com.example.android.bussolaaccelerometro.MyApplication
 import com.github.mikephil.charting.charts.LineChart
 import com.github.mikephil.charting.components.AxisBase
 import com.github.mikephil.charting.components.XAxis
-import com.github.mikephil.charting.components.YAxis
 import com.github.mikephil.charting.data.Entry
 import com.github.mikephil.charting.data.LineData
 import com.github.mikephil.charting.data.LineDataSet
@@ -30,7 +28,6 @@ import com.github.mikephil.charting.listener.OnChartGestureListener
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import java.util.*
 import kotlin.collections.ArrayList
-import kotlin.math.abs
 
 
 class ChartFragment : Fragment() {
@@ -65,11 +62,13 @@ class ChartFragment : Fragment() {
         setupEmptyChart(chartAccZ, -12f, 12f, getString(R.string.accelerazione_z_udm))
         setupEmptyChart(chartGradiNord, 0f, 360f, getString(R.string.gradi_nord), false)
 
+
         val accCharts = listOf(chartAccX, chartAccY, chartAccZ)
         for (chart in accCharts)
             chart.onChartGestureListener = ChartGestureListener(chart, accCharts)
         chartGradiNord.onChartGestureListener =
             ChartGestureListener(chartGradiNord, listOf(chartGradiNord))
+
 
         val playPause = view.findViewById<FloatingActionButton>(R.id.playPause)
         playPause.setOnClickListener {
@@ -173,11 +172,11 @@ class ChartFragment : Fragment() {
     }
 
     /**
-     * Rinfresca la visualizzazione del grafico con i nuovi valori forniti.
+     * Rinfresca la visualizzazione del grafico con una nuova lista di valori.
      * @param chart grafico da aggiornare
      * @param yValues lista di coordinate y per i punti del grafico.
      * @param xTimes lista di coordinate x per i punti del grafico.
-     * @param oldestTimestamp timestamp
+     * @param oldestTimestamp timestamp del primo punto della lista
      */
     private fun refreshChart(
         chart: LineChart,
@@ -246,9 +245,19 @@ class ChartFragment : Fragment() {
          */
         var oldestTimestamp: Long = 0
 
+        /**
+         * Called when a value from an axis is to be formatted before being drawn.
+         * In questo caso value è una misura di tempo in secondi.
+         *
+         * @param value the value to be formatted
+         * @param axis  the axis the value belongs to
+         * @return stringa di testo che rappresenta *value*
+         */
         override fun getAxisLabel(value: Float, axis: AxisBase?): String {
             var label = ""
             if (oldestTimestamp != 0L) {
+
+                // calcolo il timestamp corrispondente a questo valore
                 val timestamp = oldestTimestamp + (value * 1000).toLong()
                 val calendar = Calendar.getInstance()
                 calendar.time = Date(timestamp)
@@ -270,6 +279,7 @@ class ChartFragment : Fragment() {
      */
     private class ChartGestureListener(val chart: LineChart, val relatedCharts: List<LineChart>) :
         OnChartGestureListener {
+
         override fun onChartGestureStart(
             me: MotionEvent?,
             lastPerformedGesture: ChartTouchListener.ChartGesture?
@@ -299,16 +309,37 @@ class ChartFragment : Fragment() {
         ) {
         }
 
+        /**
+         * Callbacks when the chart is scaled / zoomed via pinch zoom gesture.
+         * Quando questo grafico viene zoomato eseguo lo stesso zoom su tutti gli altri
+         * grafici collegati.
+         * @param me
+         * @param scaleX scalefactor on the x-axis
+         * @param scaleY scalefactor on the y-axis
+         */
         override fun onChartScale(me: MotionEvent?, scaleX: Float, scaleY: Float) {
             Log.d(LOG_TAG, "onChartScale  ${chart.toString()}")
             alignChartsAndSetCirclesVisibility()
         }
 
+        /**
+         * Callbacks when the chart is moved / translated via drag gesture.
+         * Quando questo grafico viene traslato eseguo la stessa traslazione su tutti gli altri
+         * grafici collegati.
+         * @param me
+         * @param dX translation distance on the x-axis
+         * @param dY translation distance on the y-axis
+         */
         override fun onChartTranslate(me: MotionEvent?, dX: Float, dY: Float) {
             Log.d(LOG_TAG, "onChartTranslate  ${chart.toString()}")
             alignChartsAndSetCirclesVisibility()
         }
 
+        /**
+         * Allinea rispetto a questo i grafici collegati.
+         * Inoltre imposta la visibilità di cerchietto e valore dei campioni su questo grafico e su
+         * tutti quelli collegati.
+         */
         private fun alignChartsAndSetCirclesVisibility() {
             chart.performTransformation()
             for (dstChart in relatedCharts) {
@@ -319,6 +350,14 @@ class ChartFragment : Fragment() {
             }
         }
 
+        /**
+         * Copia zoom e posizione x da un grafico sorgente a un grafico destinazione.
+         * Il grafico sorgente non viene modificato.
+         * Al termine dell'operazione il grafico di destinazione visualizzerà lo stesso range di
+         * valori X del grafico sorgente.
+         * @param dstChart grafico di destinazione
+         * @param srcChart grafico sorgente
+         */
         private fun alignChart(dstChart: LineChart, srcChart: LineChart) {
             dstChart.stopAnimations()
 
@@ -339,7 +378,12 @@ class ChartFragment : Fragment() {
             dstChart.viewPortHandler.refresh(dstMatrix, dstChart, true)
         }
 
-        fun setCirclesVisibility(dstChart: LineChart) {
+        /**
+         * Abilita la visualizzazione di cerchietto e valore dei campioni quando il numero di
+         * secondi visibili sull'asse X è inferiore ad una certa soglia.
+         * @param dstChart chart di destinazione
+         */
+        private fun setCirclesVisibility(dstChart: LineChart) {
             // numero di secondi visibili a schermo
             val visibleSec = dstChart.visibleXRange
             val dataSet = dstChart.data.getDataSetByIndex(0) as LineDataSet

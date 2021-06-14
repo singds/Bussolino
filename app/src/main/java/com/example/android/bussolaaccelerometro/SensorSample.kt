@@ -1,4 +1,4 @@
-package com.example.android.bussolaaccelerometro.data
+package com.example.android.bussolaaccelerometro
 
 import android.os.Parcelable
 import kotlinx.parcelize.Parcelize

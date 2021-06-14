@@ -1,13 +1,12 @@
-package com.example.android.bussolaaccelerometro.chart
+package com.example.android.bussolaaccelerometro.fragmentChart
 
 import android.os.Bundle
 import androidx.lifecycle.*
 import androidx.savedstate.SavedStateRegistryOwner
-import com.example.android.bussolaaccelerometro.data.Repository
-import com.example.android.bussolaaccelerometro.data.SensorSample
-import com.example.android.bussolaaccelerometro.home.HomeViewModel
+import com.example.android.bussolaaccelerometro.Repository
+import com.example.android.bussolaaccelerometro.SensorSample
 
-class ChartViewModel(private val repo:Repository, private val state: SavedStateHandle): ViewModel()
+class ChartViewModel(private val repo: Repository, private val state: SavedStateHandle): ViewModel()
 {
     val listSample: LiveData<List<SensorSample>> by repo::listSample
 
@@ -33,9 +32,9 @@ class ChartViewModel(private val repo:Repository, private val state: SavedStateH
 
 
 class ChartViewModelFactory(
-        private val repo:Repository,
-        owner: SavedStateRegistryOwner,
-        defaultArgs: Bundle? = null
+    private val repo: Repository,
+    owner: SavedStateRegistryOwner,
+    defaultArgs: Bundle? = null
 ) : AbstractSavedStateViewModelFactory(owner, defaultArgs)
 {
     override fun <T : ViewModel?> create(key: String, modelClass: Class<T>, handle: SavedStateHandle): T {

@@ -1,4 +1,4 @@
-package com.example.android.bussolaaccelerometro.home
+package com.example.android.bussolaaccelerometro.fragmentHome
 
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -14,10 +14,9 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.fragment.findNavController
 import com.example.android.bussolaaccelerometro.R
-import com.example.android.bussolaaccelerometro.data.ReaderService
-import com.example.android.bussolaaccelerometro.data.Repository
+import com.example.android.bussolaaccelerometro.ReaderService
 import com.example.android.bussolaaccelerometro.databinding.CardAccelBinding
-import com.example.android.bussolaaccelerometro.main.MyApplication
+import com.example.android.bussolaaccelerometro.MyApplication
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 

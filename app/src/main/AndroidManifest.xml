@@ -11,13 +11,13 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.BussolaAccelerometro"
-        android:name=".main.MyApplication">
+        android:name=".MyApplication">
         <service
-            android:name=".data.ReaderService"
+            android:name=".ReaderService"
             android:enabled="true"
             android:exported="false" />
 
-        <activity android:name=".main.MainActivity">
+        <activity android:name=".activityMain.MainActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
