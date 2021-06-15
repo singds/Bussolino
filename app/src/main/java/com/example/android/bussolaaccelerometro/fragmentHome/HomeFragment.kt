@@ -198,18 +198,18 @@ class HomeFragment : Fragment()
                 else -> angolo
             }
         }
-        return angolo;
+        return angolo
     }
 
     /**
-     * Mostra un dialog che informa l'utente sulla possibilità di abilitare il campionamento
-     * in background. Il dialog deve essere confermato.
+     * Mostra un dialog che informa l'utente sul funzionamento in background.
+     * Il dialog deve essere confermato.
      */
     private fun showDialogInfo() {
         context?.let { context ->
             MaterialAlertDialogBuilder(context)
                     .setTitle(getString(R.string.informazione))
-                    .setMessage(getString(R.string.puoi_abilitare_la_registrazione))
+                    .setMessage(getString(R.string.funzionamento_in_background))
                     .setPositiveButton(getString(R.string.ok)) { _, _ ->
                         viewModel.onDialogInfoOk()
                     }
