@@ -11,21 +11,21 @@ import kotlinx.parcelize.Parcelize
 
 class ChartViewModel(private val repo: Repository, private val state: SavedStateHandle): ViewModel()
 {
-    val listSample: LiveData<List<SensorSample>> by repo::listSample
+    val realtimeListSample: LiveData<List<SensorSample>> by repo::listSample
 
-    val inPausa:LiveData<Boolean> = state.getLiveData(STATE_IN_PAUSA, false)
+    val stopped:LiveData<Boolean> = state.getLiveData(STATE_STOPPED, false)
 
     private var pSampleListOnPause:List<SensorSample>? = state.get(STATE_SAMPLE_LIST_ON_PAUSE)
-    val sampleListOnPause:List<SensorSample>? by ::pSampleListOnPause
+    val sampleListStopped:List<SensorSample>? by ::pSampleListOnPause
 
     private var pChartsState:List<ChartState>? = state.get(STATE_CHARTS)
     val chartsState:List<ChartState>? by ::pChartsState
 
     fun onClickPlayPause() {
-        listSample.value?.let { okList ->
+        realtimeListSample.value?.let { okList ->
             state.set(STATE_SAMPLE_LIST_ON_PAUSE, okList)
             pSampleListOnPause = state.get(STATE_SAMPLE_LIST_ON_PAUSE)
-            state.set(STATE_IN_PAUSA, inPausa.value != true)
+            state.set(STATE_STOPPED, stopped.value != true)
         }
     }
 
@@ -44,7 +44,7 @@ class ChartViewModel(private val repo: Repository, private val state: SavedState
 
     companion object
     {
-        const val STATE_IN_PAUSA = "inPausa"
+        const val STATE_STOPPED = "stopped"
         const val STATE_SAMPLE_LIST_ON_PAUSE = "sampleListOnPause"
         const val STATE_CHARTS = "charts"
     }

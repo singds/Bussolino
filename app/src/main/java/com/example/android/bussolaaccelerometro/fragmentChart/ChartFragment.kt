@@ -18,23 +18,30 @@ import com.github.mikephil.charting.data.Entry
 import com.github.mikephil.charting.data.LineData
 import com.github.mikephil.charting.data.LineDataSet
 import com.github.mikephil.charting.formatter.ValueFormatter
-import com.github.mikephil.charting.listener.BarLineChartTouchListener
 import com.github.mikephil.charting.listener.ChartTouchListener
 import com.github.mikephil.charting.listener.OnChartGestureListener
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import java.util.*
 import kotlin.collections.ArrayList
 
-
 class ChartFragment : Fragment() {
     lateinit var viewModel: ChartViewModel
 
+    // i quattro grafici
     lateinit var chartAccX: LineChart
     lateinit var chartAccY: LineChart
     lateinit var chartAccZ: LineChart
     lateinit var chartGradiNord: LineChart
+
+    // lista di tutti i grafici
     lateinit var allCharts: List<LineChart>
 
+    /**
+     * Called to have the fragment instantiate its user interface view.
+     * This will be called between onCreate(Bundle) and onViewCreated(View, Bundle).
+     * It is recommended to only inflate the layout in this method and move logic that operates
+     * on the returned View to onViewCreated(View, Bundle).
+     */
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
@@ -46,6 +53,9 @@ class ChartFragment : Fragment() {
         return inflater.inflate(R.layout.fragment_chart, container, false)
     }
 
+    /**
+     * Called immediately after onCreateView.
+     */
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
@@ -61,6 +71,10 @@ class ChartFragment : Fragment() {
 
         allCharts = listOf(chartAccX, chartAccY, chartAccZ, chartGradiNord)
 
+
+        // Imposto un listener custom per le gesture dei grafici.
+        // Voglio che i grafici delle accelerazioni siano sempre sincronizzati: zoom e traslazioni
+        // su un grafico si ripercuotono sugli altri.
         val accCharts = listOf(chartAccX, chartAccY, chartAccZ)
         for (chart in accCharts)
             chart.onChartGestureListener = ChartGestureListener(chart, accCharts)
@@ -68,16 +82,17 @@ class ChartFragment : Fragment() {
             ChartGestureListener(chartGradiNord, listOf(chartGradiNord))
 
 
+        // Quando viene premuto il pulsante play/pausa inoltro l'azione al viewModel.
         val playPause = view.findViewById<FloatingActionButton>(R.id.playPause)
         playPause.setOnClickListener {
             viewModel.onClickPlayPause()
         }
 
 
-
-        viewModel.listSample.observe(viewLifecycleOwner) { samples ->
+        // Quando la lista dei campioni realtime si aggiorna rinfresco i grafici.
+        viewModel.realtimeListSample.observe(viewLifecycleOwner) { samples ->
             samples?.let { okSamples ->
-                if (viewModel.inPausa.value == false) {
+                if (viewModel.stopped.value == false) {
                     setSensorSamplesInCharts(okSamples)
                     for (chart in allCharts)
                         chart.setXMinMaxFitScreen()
@@ -85,33 +100,20 @@ class ChartFragment : Fragment() {
             }
         }
 
-        viewModel.inPausa.observe(viewLifecycleOwner) { inPausa ->
-            when (inPausa) {
+
+        // Il fragment può essere nello stato running (visualizzazione dei campioni realtime) o
+        // nello stato stopped (visualizzazione di un set fisso di campioni).
+        // Osservo lo stato del fragment controllato dal viewModel e aggiorno la configurazione
+        // dei grafici quando viene modificato.
+        viewModel.stopped.observe(viewLifecycleOwner) { stopped ->
+            when (stopped) {
                 true -> {
                     playPause.setImageResource(R.drawable.ic_play)
-
-                    setSensorSamplesInCharts(viewModel.sampleListOnPause!!)
-                    for (k in allCharts.indices) {
-                        viewModel.chartsState?.let { states ->
-                            allCharts[k].setXMinMax(states[k].xMin, states[k].xRange)
-                        }
-                        if (viewModel.chartsState == null)
-                            allCharts[k].setXMinMaxFitScreen()
-
-                        allCharts[k].isDragXEnabled = true
-                        allCharts[k].isScaleXEnabled = true
-                    }
+                    setChartsInStoppedMode()
                 }
                 else -> {
                     playPause.setImageResource(R.drawable.ic_pause)
-
-                    // elimino lo stato dei grafici precedentemente salvato
-                    viewModel.saveChartsState(null)
-                    for (chart in allCharts) {
-                        chart.stopAnimations()
-                        chart.isDragXEnabled = false
-                        chart.isScaleXEnabled = false
-                    }
+                    setChartsInRunningMode()
                 }
             }
         }
@@ -122,11 +124,50 @@ class ChartFragment : Fragment() {
      */
     override fun onPause() {
         super.onPause()
-        val states:MutableList<ChartViewModel.ChartState> = mutableListOf()
+
+        // Quando fragment viene messo in pausa salvo lo stato di tutti i grafici.
+        val states: MutableList<ChartViewModel.ChartState> = mutableListOf()
         for (chart in allCharts)
             states.add(ChartViewModel.ChartState(chart.lowestVisibleX, chart.visibleXRange))
         viewModel.saveChartsState(states)
     }
+
+    /**
+     * Configura i grafici per la modalità stopped.
+     */
+    private fun setChartsInStoppedMode()
+    {
+        // I grafici visualizzano uno screenshot dei campioni.
+        setSensorSamplesInCharts(viewModel.sampleListStopped!!)
+
+        val savedChartsState = viewModel.chartsState
+        if (savedChartsState != null) {
+            for (k in allCharts.indices)
+                allCharts[k].setXMinMax(savedChartsState[k].xMin, savedChartsState[k].xRange)
+        } else {
+            for (chart in allCharts)
+                chart.setXMinMaxFitScreen()
+        }
+
+        for (chart in allCharts) {
+            chart.isDragXEnabled = true
+            chart.isScaleXEnabled = true
+        }
+    }
+
+    /**
+     * Configura i grafici per la modalità running.
+     */
+    private fun setChartsInRunningMode()
+    {
+        viewModel.saveChartsState(null)
+        for (chart in allCharts) {
+            chart.stopAnimations()
+            chart.isDragXEnabled = false
+            chart.isScaleXEnabled = false
+        }
+    }
+
 
     /**
      * Inizializza il chart e il suoi stile grafico.

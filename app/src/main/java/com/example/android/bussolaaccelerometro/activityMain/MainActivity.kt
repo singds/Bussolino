@@ -41,8 +41,7 @@ class MainActivity : AppCompatActivity()
     /**
      * Chiamato quando l'activity torna in foreground.
      *
-     * Quando l'activity torna in foreground recupero lo stato persistente e rimetto in esecuzione
-     * il servizio di acquisizione dati.
+     * Quando l'activity torna in foreground mi assicuro che il servizio di acquisizione dati sia attivo.
      */
     override fun onResume() {
         super.onResume()
@@ -72,7 +71,7 @@ class MainActivity : AppCompatActivity()
 
             val intentStartInBackground = Intent()
                     .setClass(this, ReaderService::class.java)
-                    .setAction(ReaderService.ACTION_RUN_IN_BACKGROUND)
+                    .setAction(ReaderService.ACTION_RUN_IN_FOREGROUND)
             startService(intentStartInBackground)
         }
     }

@@ -28,6 +28,12 @@ class HomeFragment : Fragment()
     private lateinit var bindingAccY:CardAccelBinding
     private lateinit var bindingAccZ:CardAccelBinding
 
+    /**
+     * Called to have the fragment instantiate its user interface view.
+     * This will be called between onCreate(Bundle) and onViewCreated(View, Bundle).
+     * It is recommended to only inflate the layout in this method and move logic that operates
+     * on the returned View to onViewCreated(View, Bundle).
+     */
     override fun onCreateView(
             inflater: LayoutInflater, container: ViewGroup?,
             savedInstanceState: Bundle?
@@ -41,6 +47,9 @@ class HomeFragment : Fragment()
         return inflater.inflate(R.layout.fragment_home, container, false)
     }
 
+    /**
+     * Called immediately after onCreateView.
+     */
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
