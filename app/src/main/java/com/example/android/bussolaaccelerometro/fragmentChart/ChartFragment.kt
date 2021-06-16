@@ -24,6 +24,23 @@ import com.google.android.material.floatingactionbutton.FloatingActionButton
 import java.util.*
 import kotlin.collections.ArrayList
 
+/**
+ * [ChartFragment] visualizza i 4 grafici di accelerazione x,y,z e gradiNord.
+ * I campioni sono raccolti in background con frequenza di 2Hz dal servizio [ReaderService].
+ * Il fragment può essere nello stato running o nello stato stopped.
+ * Il cambio di stato avviene premendo il FAB (play / stop).
+ *
+ * Nello stato running i grafici sono aggiornati appena la lista dello storico dei campioni viene
+ * modificata. In questo stato i grafici visualizzano l'intero range di campioni e non permettono
+ * zoom e traslazioni.
+ *
+ * Entrando nello stato stopped viene fatto uno screenshot dello storico dei campioni.
+ * In questo stato i grafici mostrano lo screenshot dei campioni permettendo lo zoom e lo scorrimento
+ * per ispezionare i singoli valori.
+ * Il campionamento non viene mai interrotto e continua in background.
+ * Ritornando allo stato running lo screenshot viene scartato e riprende la visualizzazione dei campioni
+ * acquisti negli ultimi 5 minuti.
+ */
 class ChartFragment : Fragment() {
     lateinit var viewModel: ChartViewModel
 
@@ -33,7 +50,7 @@ class ChartFragment : Fragment() {
     lateinit var chartAccZ: LineChart
     lateinit var chartGradiNord: LineChart
 
-    // lista di tutti i grafici
+    // una lista che contiene tutti e quattro grafici
     lateinit var allCharts: List<LineChart>
 
     /**
@@ -60,6 +77,7 @@ class ChartFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
+        // Recupero i riferimenti ai quattro grafici e li inizializzo.
         chartAccX = view.findViewById(R.id.chartAccX) as LineChart
         chartAccY = view.findViewById(R.id.chartAccY) as LineChart
         chartAccZ = view.findViewById(R.id.chartAccZ) as LineChart
@@ -76,6 +94,7 @@ class ChartFragment : Fragment() {
         // Imposto un listener custom per le gesture dei grafici.
         // Voglio che i grafici delle accelerazioni siano sempre sincronizzati: zoom e traslazioni
         // su un grafico si ripercuotono sugli altri.
+        // Il grafico dei gradi nord è invece indipendente.
         val accCharts = listOf(chartAccX, chartAccY, chartAccZ)
         for (chart in accCharts)
             chart.onChartGestureListener = ChartGestureListener(chart, accCharts)
@@ -90,6 +109,10 @@ class ChartFragment : Fragment() {
         }
 
 
+        // Il viewModel espone la lista dei campioni che in ogni istante deve essere visibile sui grafici.
+        // Quando la lista cambia rinfresco i grafici.
+        // La lista cambia periodicamente quando il fragment è in stato running.
+        // La lista rimane costante quando il fragment è in stato stopped.
         viewModel.chartSampleList.observe(viewLifecycleOwner) { samples ->
             samples?.let {
                 if (viewModel.stopped.value == true) {
@@ -101,10 +124,7 @@ class ChartFragment : Fragment() {
         }
 
 
-        // Il fragment può essere nello stato running (visualizzazione dei campioni realtime) o
-        // nello stato stopped (visualizzazione di un set fisso di campioni).
-        // Osservo lo stato del fragment controllato dal viewModel e aggiorno la configurazione
-        // dei grafici quando viene modificato.
+        // Osservo lo stato running/stopped del fragment e aggiorno di conseguenza l'immagine del FAB.
         viewModel.stopped.observe(viewLifecycleOwner) { stopped ->
             when (stopped) {
                 true -> {
@@ -124,6 +144,7 @@ class ChartFragment : Fragment() {
         super.onPause()
 
         // Quando fragment viene messo in pausa salvo lo stato di tutti i grafici.
+        // Lo stato di ciascun grafico include le coordinate dell'intervallo sull'asse X che sta visualizzando.
         val states: MutableList<ChartViewModel.ChartState> = mutableListOf()
         for (chart in allCharts)
             states.add(ChartViewModel.ChartState(chart.lowestVisibleX, chart.visibleXRange))
@@ -131,13 +152,17 @@ class ChartFragment : Fragment() {
     }
 
     /**
-     * Configura i grafici per la modalità stopped.
+     * Aggiorna i grafici per la modalità stopped.
+     * @param list lo screenshot statico dello storico dei campioni.
      */
-    private fun setChartsInStoppedMode(list: List<SensorSample>)
-    {
+    private fun setChartsInStoppedMode(list: List<SensorSample>) {
         // I grafici visualizzano uno screenshot dei campioni.
         setSensorSamplesInCharts(list)
 
+        // Verifico se precedentemente è stato salvato lo stato dei grafici.
+        // Lo stato dei grafici viene salvato ogni volta che il fragment viene messo in pausa, e
+        // viene eliminato all'ingresso dello stato stopped dopo la pressione del FAP pausa.
+        // Se esiste uno stato valido lo ripristino.
         val savedChartsState = viewModel.chartsState
         if (savedChartsState != null) {
             for (k in allCharts.indices)
@@ -154,13 +179,12 @@ class ChartFragment : Fragment() {
     }
 
     /**
-     * Configura i grafici per la modalità running.
+     * Aggiorna i grafici per la modalità running.
+     * @param list la lista dinamica dello storico dei campioni.
      */
-    private fun setChartsInRunningMode(list: List<SensorSample>)
-    {
+    private fun setChartsInRunningMode(list: List<SensorSample>) {
         setSensorSamplesInCharts(list)
 
-        viewModel.saveChartsState(null)
         for (chart in allCharts) {
             chart.stopAnimations()
             chart.isDragXEnabled = false
@@ -190,7 +214,7 @@ class ChartFragment : Fragment() {
         lineWidth: Float = 1.3f
     ) {
 
-        // Ogni grafico può visualizzare uno o più Dataset.
+        // Ogni grafico può visualizzare uno o più DataSet.
         // Un DataSet incapsula un insieme di dati e diverse configurazioni per la loro visualizzazione.
         // Creo un DataSet inizialmente vuoto per il grafico.
         val dataSet = LineDataSet(listOf(Entry(0f, 0f)), label)
@@ -219,6 +243,8 @@ class ChartFragment : Fragment() {
             axisMaximum = yMax
             axisMinimum = yMin
         }
+
+        chart.setVisibleXRangeMinimum(1f) // 1 secondo di minimo intervallo visualizzabile sull'asse x
         //chart.isDragDecelerationEnabled = false
         chart.description.isEnabled = false
         chart.isHighlightPerDragEnabled = false
@@ -247,7 +273,7 @@ class ChartFragment : Fragment() {
         xTimes: List<Float>,
         oldestTimestamp: Long
     ) {
-        // recuper i dati attualmente visualizzati nel grafico
+        // Recuper i dati attualmente visualizzati nel grafico.
         val chartData = chart.data
         val dataSet = chartData.getDataSetByIndex(0) as LineDataSet
 
@@ -258,6 +284,7 @@ class ChartFragment : Fragment() {
             points.add(Entry(xTimes[k], yValues[k]))
         points.sortBy { it.x }
 
+        // Aggiorno il dataSet con il nuovo array di punti
         dataSet.values = points
 
         // Aggiorno il timestamp di riferimento per l'asse x del grafico.

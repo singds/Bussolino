@@ -4,7 +4,7 @@ import android.app.Application
 
 /**
  * [MyApplication] estende Application e funge da contenitore per le risorse condivise da tutte le
- * componenti dell'applicazione.
+ * componenti dell'applicazione. Vedi [Repository].
  */
 class MyApplication : Application() {
     private lateinit var pRepository: Repository

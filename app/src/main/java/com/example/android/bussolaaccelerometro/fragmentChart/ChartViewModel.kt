@@ -9,15 +9,19 @@ import com.example.android.bussolaaccelerometro.SensorSample
 import kotlinx.parcelize.Parcelize
 import java.util.Observer
 
-class ChartViewModel(private val repo: Repository, private val state: SavedStateHandle): ViewModel()
-{
-    val stopped:LiveData<Boolean> = state.getLiveData(STATE_STOPPED, false)
+/**
+ * [ChartViewModel] contiene la logica di controllo per [ChartFragment].
+ * Il viewModel recupera i dati grezzi e li trasforma preparandoli per la visualizzazione.
+ */
+class ChartViewModel(private val repo: Repository, private val state: SavedStateHandle) :
+    ViewModel() {
+    val stopped: LiveData<Boolean> = state.getLiveData(STATE_STOPPED, false)
 
     private val pChartSampleList = MutableLiveData<List<SensorSample>>()
     val chartSampleList: LiveData<List<SensorSample>> by ::pChartSampleList
 
-    private var pChartsState:List<ChartState>? = state.get(STATE_CHARTS)
-    val chartsState:List<ChartState>? by ::pChartsState
+    private var pChartsState: List<ChartState>? = state.get(STATE_CHARTS)
+    val chartsState: List<ChartState>? by ::pChartsState
 
     private val newListSampleObserver: Observer =
         Observer { _, _ ->
@@ -49,13 +53,15 @@ class ChartViewModel(private val repo: Repository, private val state: SavedState
 
     fun onClickPlayPause() {
         state.set(STATE_STOPPED, stopped.value != true)
-        if (stopped.value == true)
-        {
+        if (stopped.value == true) {
+
+            // Cancello lo stato dei grafici precedentemente salvato.
+            saveChartsState(null)
+
             val listSnapshot = repo.listSample.toList()
             state.set(STATE_SAMPLE_LIST_ON_PAUSE, listSnapshot)
             pChartSampleList.value = listSnapshot
         }
-
     }
 
     fun saveChartsState(states: List<ChartState>?) {
@@ -66,13 +72,12 @@ class ChartViewModel(private val repo: Repository, private val state: SavedState
     @Parcelize
     data class ChartState(
         // minimo valore visibile sull'asse x
-        val xMin:Float,
+        val xMin: Float,
         // range di valori visibili sull'asse x
-        val xRange:Float
+        val xRange: Float
     ) : Parcelable
 
-    companion object
-    {
+    companion object {
         const val STATE_STOPPED = "stopped"
         const val STATE_SAMPLE_LIST_ON_PAUSE = "sampleListOnPause"
         const val STATE_CHARTS = "charts"
@@ -84,9 +89,12 @@ class ChartViewModelFactory(
     private val repo: Repository,
     owner: SavedStateRegistryOwner,
     defaultArgs: Bundle? = null
-) : AbstractSavedStateViewModelFactory(owner, defaultArgs)
-{
-    override fun <T : ViewModel?> create(key: String, modelClass: Class<T>, handle: SavedStateHandle): T {
+) : AbstractSavedStateViewModelFactory(owner, defaultArgs) {
+    override fun <T : ViewModel?> create(
+        key: String,
+        modelClass: Class<T>,
+        handle: SavedStateHandle
+    ): T {
         if (modelClass.isAssignableFrom(ChartViewModel::class.java)) {
             return ChartViewModel(repo, handle) as T
         }

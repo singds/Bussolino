@@ -18,7 +18,8 @@ import kotlin.math.atan2
 
 
 /**
- * Questo Service raccoglie i dati dai sensori e li rende disponibili alle altre componenti dell'app.
+ * Questo Service raccoglie i dati dai sensori e li rende disponibili alle altre componenti dell'app
+ * attraverso [Repository].
  *
  * Il service è sempre attivo quando l'applicazione è in foreground.
  * Il servizio vene messo nello stato foreground alla chiusura dell'activity.
