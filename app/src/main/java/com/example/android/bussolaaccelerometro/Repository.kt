@@ -4,6 +4,7 @@ import android.content.Context
 import android.content.SharedPreferences
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
+import java.util.*
 
 /**
  * [Repository] svolge il ruolo di accentratore per i dati comuni dell'applicazione.
@@ -43,24 +44,30 @@ class Repository(private val context: Context) {
      * La lista dei campioni raccolti negli ultimi 5 minuti.
      * Il primo elemento della lista è quello più recente.
      */
-    private val pListSampleValues = mutableListOf<SensorSample>()
+    private val pListSample = mutableListOf<SensorSample>()
+    // Versione del campo pListSample, accessibile solo in lettura
+    val listSample: List<SensorSample> get() = pListSample
+
+    // Un oggetto osservabile che notifica gli osservatore quando la lista di campioni viene aggiornata.
+    val newListSampleAvailable = object : Observable() {
+        override fun hasChanged(): Boolean {
+            return true
+        }
+    }
 
     /**
-     * Un LiveData che permette di osservare la lista dei campioni.
+     * L'ultimo campione raccolto.
      */
-    private var pListSample = MutableLiveData<List<SensorSample>>(pListSampleValues)
+    private var pCurrentSample = SensorSample(0f, 0f, 0f, 0f, Date())
+    // Versione del campo pCurrentSample, accessibile solo in lettura
+    val currentSample: SensorSample get() = pCurrentSample
 
-    // Versione pubblica readonly di pListSample
-    val listSample: LiveData<List<SensorSample>> by ::pListSample
-
-    /**
-     * LiveData che racchiude l'ultimo campione acquisito.
-     * Viene aggiornato periodicamente con frequenza elevata.
-     */
-    private val pCurrentSample = MutableLiveData<SensorSample>()
-
-    // Versione pubblic readonly di pCurrentSample
-    val currentSample: LiveData<SensorSample> by ::pCurrentSample
+    // Un oggetto osservabile che notifica gli osservatore quando è disponibile un nuovo campione realtime.
+    val newCurrentSampleAvailable = object : Observable() {
+        override fun hasChanged(): Boolean {
+            return true
+        }
+    }
 
     /**
      * Aggiunge un nuovo campione alla lista dello storico dei campioni.
@@ -70,14 +77,13 @@ class Repository(private val context: Context) {
      */
     fun putSensorSampleToList(sample: SensorSample) {
         // Se lo storico ha raggiunto la dimensione massima rimuovo i campioni più vecchi in eccesso.
-        while (pListSampleValues.size >= NUM_CAMPIONI)
-            pListSampleValues.removeLast()
+        while (pListSample.size >= NUM_CAMPIONI)
+            pListSample.removeLast()
 
         // Aggiungo in testa il nuovo campione.
-        pListSampleValues.add(0, sample)
+        pListSample.add(0, sample)
 
-        // Scateno una notifica scrivendo il valore del LiveData.
-        pListSample.value = pListSampleValues
+        newListSampleAvailable.notifyObservers()
     }
 
     /**
@@ -85,17 +91,19 @@ class Repository(private val context: Context) {
      * @param sample campione con i nuovi dati acquisiti dai sensori.
      */
     fun putSensorSampleToCurrent(sample: SensorSample) {
-        pCurrentSample.value = sample
+        pCurrentSample = sample
+
+        newCurrentSampleAvailable.notifyObservers()
     }
 
     /**
      * Svuota lo storico dei campioni.
      */
     fun clearSampleList() {
-        pListSampleValues.clear()
+        pListSample.clear()
 
         // Notifico gli osservatori.
-        pListSample.value = pListSampleValues
+        newListSampleAvailable.notifyObservers()
     }
 
     companion object {

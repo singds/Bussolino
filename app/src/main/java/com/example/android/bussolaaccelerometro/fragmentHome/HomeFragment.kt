@@ -249,7 +249,9 @@ class HomeFragment : Fragment() {
      * The coordinate-system is defined relative to the screen of the phone in its default orientation.
      * See [SensorEvent](https://developer.android.com/reference/android/hardware/SensorEvent).
      *
-     * @param angolo angolo fra immagine e asse Y del device.
+     * @param angolo angolo desiderato fra immagine e asse Y del device.
+     * @return angolo di cui deve essere ruotata l'immagine per risultare inclinata dell'angolo richiesto
+     * rispetto all'asse y.
      */
     private fun getAngoloImmagine(angolo: Int): Int {
         view?.display?.apply {

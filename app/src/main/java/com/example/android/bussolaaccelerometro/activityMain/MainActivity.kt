@@ -4,7 +4,6 @@ import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.content.Context
 import android.content.Intent
-import android.content.SharedPreferences
 import android.os.Build
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
@@ -18,13 +17,16 @@ import com.example.android.bussolaaccelerometro.ReaderService
  * L'applicazione è costituita da una singola activity e da più fragment.
  * Ogni fragment realizza una pagina diversa.
  * La maggior parte della UI è sviluppata nei fragment.
- * L'activity si occupa di salvare e recuperare lo stato persistente dell'applicazione
- * (memorizzato in [SharedPreferences]) e di creare il canale di notifica.
+ * L'activity si occupa soltanto di inizializzare il canale di notifica e di mettere in esecuzione
+ * il servizio di acquisizione dati [ReaderService].
  */
 class MainActivity : AppCompatActivity()
 {
     private lateinit var viewModel:MainActivityViewModel
 
+    /**
+     * Called when the activity is starting.
+     */
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
@@ -46,7 +48,7 @@ class MainActivity : AppCompatActivity()
     override fun onResume() {
         super.onResume()
 
-        // Metto in esecuzione il servizio che eseguira l'acquisizione dei dati dai sensori.
+        // Metto in esecuzione il servizio che acquisisce i dati dai sensori.
         val intent = Intent()
             .setClass(this, ReaderService::class.java)
             .setAction(ReaderService.ACTION_START)
@@ -57,16 +59,15 @@ class MainActivity : AppCompatActivity()
      * Chiamato quando l'activity termina di essere il focus principale dell'utente.
      * L'activity potrebbe restare ancora visibile dopo questo metodo.
      *
-     * Non appena l'activity esce dallo stato foreground interrompo subito il campionamento
-     * a meno che l'utente non abbia espressamente specificato di volerlo mantenere attivo.
+     * Non appena l'activity esce dallo stato foreground metto in foreground il servizio di acquisizione.
      */
     override fun onPause() {
         super.onPause()
 
         // Se sto soltanto cambiando configurazione (landscape / lingua) non modifico lo stato del
         // servizio.
-        // Se l'utente sta chiudendo l'activity chiudo anche il servizio o lo predispongo per
-        // una continuativa esecuzione in background.
+        // Se l'utente sta chiudendo l'activity predispongo il servizio per una continuativa
+        // esecuzione in background.
         if (!isChangingConfigurations) {
 
             val intentStartInBackground = Intent()
@@ -92,8 +93,8 @@ class MainActivity : AppCompatActivity()
      * notifiche rendendo inoltre queste impostazioni uniformi fra le diverse applicazioni.
      */
     private fun createNotificationChannel() {
-        // nelle API 26+ devo creare un notification channel per mostrare notifica
-        // NotificationChannel class is new and not in the support library
+        // nelle API 26+ devo creare un notification channel per mostrare notifica.
+        // NotificationChannel class is new and not in the support library.
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O)
         {
             val channel = NotificationChannel(ID_NOTIF_CH_MAIN,
@@ -101,7 +102,7 @@ class MainActivity : AppCompatActivity()
                     NotificationManager.IMPORTANCE_LOW)
             channel.description = getString(R.string.tutte_le_notifiche)
 
-            // Un canale può essere registrato più volte senza errori
+            // Un canale può essere registrato più volte senza errori.
             val notificationManager: NotificationManager =
                     getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
             notificationManager.createNotificationChannel(channel)
@@ -113,7 +114,7 @@ class MainActivity : AppCompatActivity()
         /**
          * Notification channel id: id del channel principale (l'unico).
          */
-        const val ID_NOTIF_CH_MAIN = "NotifChMain"
+        const val ID_NOTIF_CH_MAIN = "notifChMain"
 
         /**
          * Notification id: id della notifica di app running in background.

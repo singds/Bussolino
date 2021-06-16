@@ -90,13 +90,12 @@ class ChartFragment : Fragment() {
         }
 
 
-        // Quando la lista dei campioni realtime si aggiorna rinfresco i grafici.
-        viewModel.realtimeListSample.observe(viewLifecycleOwner) { samples ->
-            samples?.let { okSamples ->
-                if (viewModel.stopped.value == false) {
-                    setSensorSamplesInCharts(okSamples)
-                    for (chart in allCharts)
-                        chart.setXMinMaxFitScreen()
+        viewModel.chartSampleList.observe(viewLifecycleOwner) { samples ->
+            samples?.let {
+                if (viewModel.stopped.value == true) {
+                    setChartsInStoppedMode(it)
+                } else {
+                    setChartsInRunningMode(it)
                 }
             }
         }
@@ -110,11 +109,9 @@ class ChartFragment : Fragment() {
             when (stopped) {
                 true -> {
                     playPause.setImageResource(R.drawable.ic_play)
-                    setChartsInStoppedMode()
                 }
                 else -> {
                     playPause.setImageResource(R.drawable.ic_pause)
-                    setChartsInRunningMode()
                 }
             }
         }
@@ -136,10 +133,10 @@ class ChartFragment : Fragment() {
     /**
      * Configura i grafici per la modalità stopped.
      */
-    private fun setChartsInStoppedMode()
+    private fun setChartsInStoppedMode(list: List<SensorSample>)
     {
         // I grafici visualizzano uno screenshot dei campioni.
-        setSensorSamplesInCharts(viewModel.sampleListStopped!!)
+        setSensorSamplesInCharts(list)
 
         val savedChartsState = viewModel.chartsState
         if (savedChartsState != null) {
@@ -159,13 +156,16 @@ class ChartFragment : Fragment() {
     /**
      * Configura i grafici per la modalità running.
      */
-    private fun setChartsInRunningMode()
+    private fun setChartsInRunningMode(list: List<SensorSample>)
     {
+        setSensorSamplesInCharts(list)
+
         viewModel.saveChartsState(null)
         for (chart in allCharts) {
             chart.stopAnimations()
             chart.isDragXEnabled = false
             chart.isScaleXEnabled = false
+            chart.setXMinMaxFitScreen()
         }
     }
 

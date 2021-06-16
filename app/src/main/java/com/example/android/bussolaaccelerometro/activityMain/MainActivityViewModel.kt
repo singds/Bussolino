@@ -4,6 +4,11 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import com.example.android.bussolaaccelerometro.Repository
 
+/**
+ * [MainActivityViewModel] contiene la logica di controllo per [MainActivity].
+ * Il viewModel recupera i dati grezzi e li trasforma preparandoli per la visualizzazione.
+ * Per il momento il viewModel è vuoto ma resta a disposizione per sviluppi futuri.
+ */
 class MainActivityViewModel(private val repo: Repository):ViewModel()
 {
 }
