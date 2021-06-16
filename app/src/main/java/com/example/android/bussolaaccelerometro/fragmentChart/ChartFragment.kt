@@ -50,6 +50,7 @@ class ChartFragment : Fragment() {
         val viewModelFactory = ChartViewModelFactory(repo, this)
         viewModel = ViewModelProvider(this, viewModelFactory).get(ChartViewModel::class.java)
 
+        // Inflate the layout for this fragment.
         return inflater.inflate(R.layout.fragment_chart, container, false)
     }
 

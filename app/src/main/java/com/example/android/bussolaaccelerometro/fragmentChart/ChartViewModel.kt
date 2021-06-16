@@ -22,9 +22,10 @@ class ChartViewModel(private val repo: Repository, private val state: SavedState
     val chartsState:List<ChartState>? by ::pChartsState
 
     fun onClickPlayPause() {
-        realtimeListSample.value?.let { okList ->
-            state.set(STATE_SAMPLE_LIST_ON_PAUSE, okList)
-            pSampleListOnPause = state.get(STATE_SAMPLE_LIST_ON_PAUSE)
+        realtimeListSample.value?.let { realtimeList ->
+            val listSnapshot = realtimeList.toList()
+            state.set(STATE_SAMPLE_LIST_ON_PAUSE, listSnapshot)
+            pSampleListOnPause = listSnapshot
             state.set(STATE_STOPPED, stopped.value != true)
         }
     }

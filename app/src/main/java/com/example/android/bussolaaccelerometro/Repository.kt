@@ -18,15 +18,15 @@ class Repository(private val context: Context) {
     private val preferences: SharedPreferences =
         context.getSharedPreferences("preferences", Context.MODE_PRIVATE)
 
-    /**
-     * Variabile memorizzata in modo permanente.
-     * True quando è abilitata la memorizzazione dei dati in background.
-     */
-    var enableRecordInBackground
-        get() = preferences.getBoolean(PREFERENCE_ENABLE_RECORD, false)
-        set(value) {
-            preferences.edit().putBoolean(PREFERENCE_ENABLE_RECORD, value).apply()
-        }
+//    /**
+//     * Variabile memorizzata in modo permanente.
+//     * True quando è abilitata la memorizzazione dei dati in background.
+//     */
+//    var enableRecordInBackground
+//        get() = preferences.getBoolean(PREFERENCE_ENABLE_RECORD, false)
+//        set(value) {
+//            preferences.edit().putBoolean(PREFERENCE_ENABLE_RECORD, value).apply()
+//        }
 
     /**
      * Variabile memorizzata in modo permanente.
