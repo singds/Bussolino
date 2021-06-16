@@ -173,6 +173,7 @@ class ChartFragment : Fragment() {
         }
 
         for (chart in allCharts) {
+            chart.setVisibleXRangeMinimum(1f) // 1 secondo di minimo intervallo visualizzabile sull'asse x
             chart.isDragXEnabled = true
             chart.isScaleXEnabled = true
         }
@@ -244,7 +245,6 @@ class ChartFragment : Fragment() {
             axisMinimum = yMin
         }
 
-        chart.setVisibleXRangeMinimum(1f) // 1 secondo di minimo intervallo visualizzabile sull'asse x
         //chart.isDragDecelerationEnabled = false
         chart.description.isEnabled = false
         chart.isHighlightPerDragEnabled = false
