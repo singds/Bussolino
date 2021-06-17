@@ -12,6 +12,7 @@ import androidx.core.content.ContextCompat.getColor
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
 import com.example.android.bussolaaccelerometro.*
+import com.example.android.bussolaaccelerometro.databinding.CursorBinding
 import com.github.mikephil.charting.charts.LineChart
 import com.github.mikephil.charting.components.AxisBase
 import com.github.mikephil.charting.components.XAxis
@@ -53,7 +54,15 @@ class ChartFragment : Fragment() {
     lateinit var chartAccZ: LineChart
     lateinit var chartGradiNord: LineChart
 
-    lateinit var cursorValue: View
+    /**
+     * Il timestamp che corrisponde al valore 0 nell'asse x.
+     */
+    var oldestTimestamp: Long = 0
+
+    lateinit var cursorTime: TextView
+    lateinit var cursorValue: TextView
+    lateinit var cursorUdm: TextView
+    lateinit var cursorStatus: TextView
 
     // una lista che contiene tutti e quattro grafici
     lateinit var allCharts: List<LineChart>
@@ -87,14 +96,44 @@ class ChartFragment : Fragment() {
         chartAccY = view.findViewById(R.id.chartAccY) as LineChart
         chartAccZ = view.findViewById(R.id.chartAccZ) as LineChart
         chartGradiNord = view.findViewById(R.id.chartGradiNord) as LineChart
-        cursorValue = view.findViewById(R.id.cursorValue)
 
-        setupEmptyChart(chartAccX, -12f, 12f, getString(R.string.accelerazione_x_udm))
-        setupEmptyChart(chartAccY, -12f, 12f, getString(R.string.accelerazione_y_udm))
-        setupEmptyChart(chartAccZ, -12f, 12f, getString(R.string.accelerazione_z_udm))
-        setupEmptyChart(chartGradiNord, 0f, 360f, getString(R.string.gradi_nord), false)
+        setupEmptyChart(
+            chartAccX,
+            -12f,
+            12f,
+            getString(R.string.accelerazione_x_udm),
+            getString(R.string.udm_ms2)
+        )
+        setupEmptyChart(
+            chartAccY,
+            -12f,
+            12f,
+            getString(R.string.accelerazione_y_udm),
+            getString(R.string.udm_ms2)
+        )
+        setupEmptyChart(
+            chartAccZ,
+            -12f,
+            12f,
+            getString(R.string.accelerazione_z_udm),
+            getString(R.string.udm_ms2)
+        )
+        setupEmptyChart(
+            chartGradiNord,
+            0f,
+            360f,
+            getString(R.string.gradi_nord),
+            getString(R.string.udm_gradi),
+            false
+        )
 
         allCharts = listOf(chartAccX, chartAccY, chartAccZ, chartGradiNord)
+
+        val cursor = view.findViewById<View>(R.id.cursor)
+        cursorTime = cursor.findViewById<TextView>(R.id.txtTime)
+        cursorValue = cursor.findViewById<TextView>(R.id.txtValue)
+        cursorUdm = cursor.findViewById<TextView>(R.id.txtUdm)
+        cursorStatus = cursor.findViewById(R.id.txtStatus)
 
 
         // Imposto un listener custom per le gesture dei grafici.
@@ -134,9 +173,11 @@ class ChartFragment : Fragment() {
         viewModel.stopped.observe(viewLifecycleOwner) { stopped ->
             when (stopped) {
                 true -> {
+                    cursorStatus.text = getString(R.string.stopped)
                     playPause.setImageResource(R.drawable.ic_play)
                 }
                 else -> {
+                    cursorStatus.text = getString(R.string.running)
                     playPause.setImageResource(R.drawable.ic_pause)
                 }
             }
@@ -173,6 +214,7 @@ class ChartFragment : Fragment() {
         if (savedChartsState != null) {
             for (k in allCharts.indices)
                 allCharts[k].setXMinMax(savedChartsState[k].xMin, savedChartsState[k].xRange)
+            // TODO ripristinare highligh
         } else {
             for (chart in allCharts)
                 chart.setXMinMaxFitScreen()
@@ -182,6 +224,8 @@ class ChartFragment : Fragment() {
             chart.setVisibleXRangeMinimum(1f) // 1 secondo di minimo intervallo visualizzabile sull'asse x
             chart.isDragXEnabled = true
             chart.isScaleXEnabled = true
+            chart.isHighlightPerDragEnabled = true
+            chart.isHighlightPerTapEnabled = true
         }
     }
 
@@ -192,10 +236,14 @@ class ChartFragment : Fragment() {
     private fun setChartsInRunningMode(list: List<SensorSample>) {
         setSensorSamplesInCharts(list)
 
+        removeAllHighlight()
+
         for (chart in allCharts) {
             chart.stopAnimations()
             chart.isDragXEnabled = false
             chart.isScaleXEnabled = false
+            chart.isHighlightPerTapEnabled = false
+            chart.isHighlightPerDragEnabled = false
             chart.setXMinMaxFitScreen()
         }
     }
@@ -208,6 +256,7 @@ class ChartFragment : Fragment() {
      * @param yMin il minimo valore visibile sull'asse y
      * @param yMax il massimo valore visibile sull'asse y
      * @param label una breve descrizione dei dati visualizzati
+     * @param yUdm unità di misura dell'asse y
      * @param fill (default true) true per riempire con un colore chiaro la zona compresa fra la
      * curva del grafico e l'asse x.
      * @param lineWidth spessore della linea (1 = spessore di default)
@@ -217,6 +266,7 @@ class ChartFragment : Fragment() {
         yMin: Float,
         yMax: Float,
         label: String,
+        yUdm: String,
         fill: Boolean = true,
         lineWidth: Float = 1.3f
     ) {
@@ -251,6 +301,8 @@ class ChartFragment : Fragment() {
             axisMinimum = yMin
         }
 
+        chart.setOnChartValueSelectedListener(ChartValueSelectedListener(chart, yUdm))
+
         //chart.isDragDecelerationEnabled = false
         chart.description.isEnabled = false
         chart.isHighlightPerDragEnabled = false
@@ -277,7 +329,6 @@ class ChartFragment : Fragment() {
         chart: LineChart,
         yValues: List<Float>,
         xTimes: List<Float>,
-        oldestTimestamp: Long
     ) {
         // Recuper i dati attualmente visualizzati nel grafico.
         val chartData = chart.data
@@ -293,12 +344,6 @@ class ChartFragment : Fragment() {
         // Aggiorno il dataSet con il nuovo array di punti
         dataSet.values = points
 
-        // Aggiorno il timestamp di riferimento per l'asse x del grafico.
-        // Questa libreria non accetta date o timestamp come tipo di dato per l'asse x.
-        // Sono così costretto ad usare dei float per rappresentare gli istanti temporali.
-        val formatter = chart.xAxis.valueFormatter as XAxisFormatter
-        formatter.oldestTimestamp = oldestTimestamp
-
         dataSet.notifyDataSetChanged()
         chartData.notifyDataChanged()
         chart.notifyDataSetChanged()
@@ -309,7 +354,10 @@ class ChartFragment : Fragment() {
      * @param list lista di campioni da visualizzare.
      */
     private fun setSensorSamplesInCharts(list: List<SensorSample>) {
-        val oldestTimestamp = list[list.size - 1].timestamp.time
+        // Aggiorno il timestamp di riferimento per l'asse x del grafico.
+        // Questa libreria non accetta date o timestamp come tipo di dato per l'asse x.
+        // Sono così costretto ad usare dei float per rappresentare gli istanti temporali.
+        oldestTimestamp = list[list.size - 1].timestamp.time
 
         val listAccX = list.map { value -> value.accelX }
         val listAccY = list.map { value -> value.accelY }
@@ -322,21 +370,16 @@ class ChartFragment : Fragment() {
             xValues.add(floatTime)
         }
 
-        setChartSamples(chartAccX, listAccX, xValues, oldestTimestamp)
-        setChartSamples(chartAccY, listAccY, xValues, oldestTimestamp)
-        setChartSamples(chartAccZ, listAccZ, xValues, oldestTimestamp)
-        setChartSamples(chartGradiNord, listGradiNord, xValues, oldestTimestamp)
+        setChartSamples(chartAccX, listAccX, xValues)
+        setChartSamples(chartAccY, listAccY, xValues)
+        setChartSamples(chartAccZ, listAccZ, xValues)
+        setChartSamples(chartGradiNord, listGradiNord, xValues)
     }
 
     /**
      * Un formatter che restituisce le stringhe da visualizzare come label dell'asse x.
      */
-    class XAxisFormatter : ValueFormatter() {
-        /**
-         * Il timestamp che corrisponde al valore 0 nell'asse x.
-         */
-        var oldestTimestamp: Long = 0
-
+    inner class XAxisFormatter : ValueFormatter() {
         /**
          * Called when a value from an axis is to be formatted before being drawn.
          * In questo caso value è una misura di tempo in secondi.
@@ -360,35 +403,46 @@ class ChartFragment : Fragment() {
         }
     }
 
-    private fun viewHighlightValue(x: Float, y: Float) {
-        val txtTime = cursorValue.findViewById<TextView>(R.id.txtTime)
-        val txtValue = cursorValue.findViewById<TextView>(R.id.txtValue)
-        val txtUdm = cursorValue.findViewById<TextView>(R.id.txtUdm)
+    private fun viewHighlightValue(x: Float, y: Float, udm: String) {
+
 
         // calcolo il timestamp corrispondente a questo valore
-//        val timestamp = oldestTimestamp + (x * 1000).toLong()
-//        val calendar = Calendar.getInstance()
-//        calendar.time = Date(timestamp)
+        val timestamp = oldestTimestamp + (x * 1000).toLong()
+        val calendar = Calendar.getInstance()
+        calendar.time = Date(timestamp)
 
-        txtTime.text = "udm"
-        txtValue.text = "%.2f".format(y)
-//        txtTime.text = "%02d/%02d/%04d %02d:%02d".format()
+        cursorUdm.text = udm
+        cursorValue.text = "%.2f".format(y)
+        cursorTime.text = "%02d/%02d %02d:%02d:%02d".format(
+            calendar.get(Calendar.DAY_OF_MONTH),
+            calendar.get(Calendar.MONTH),
+            calendar.get(Calendar.HOUR),
+            calendar.get(Calendar.MINUTE),
+            calendar.get(Calendar.SECOND)
+        )
     }
 
+    /**
+     * Rimuove l'highlight da tutti i grafici.
+     */
     private fun removeAllHighlight() {
         for (chart in allCharts)
             chart.highlightValue(0f, -1, false)
+        cursorUdm.text = ""
+        cursorValue.text = ""
+        cursorTime.text = ""
     }
 
-    private inner class ChartValueSelectedListener(val chart: LineChart) :
+    private inner class ChartValueSelectedListener(val chart: LineChart, val yUdm: String) :
         OnChartValueSelectedListener {
         override fun onValueSelected(e: Entry?, h: Highlight?) {
+            // Rimuovo l'Highlight da tutti gli altri grafici diversi da quello appena selezionato.
             for (c in allCharts) {
                 if (c != chart)
                     c.highlightValue(0f, -1, false)
             }
             e?.let { entry ->
-                viewHighlightValue (entry.x, entry.y)
+                viewHighlightValue(entry.x, entry.y, yUdm)
             }
         }
 

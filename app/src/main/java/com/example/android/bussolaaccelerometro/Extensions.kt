@@ -64,10 +64,10 @@ fun LineChart.refreshCircleVisibility() {
     val dataSet = data.getDataSetByIndex(0) as LineDataSet
 
     if (visibleSec < 10f) {
-        dataSet.setDrawValues(true)
+        //dataSet.setDrawValues(true)
         dataSet.setDrawCircles(true)
     } else {
-        dataSet.setDrawValues(false)
+        //dataSet.setDrawValues(false)
         dataSet.setDrawCircles(false)
     }
 }

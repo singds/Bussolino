@@ -14,7 +14,7 @@
         android:layout_weight="1">
 
         <include
-            android:id="@+id/cursorValue"
+            android:id="@+id/cursor"
             layout="@layout/cursor">
         </include>
 

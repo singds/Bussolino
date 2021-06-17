@@ -8,7 +8,7 @@
     android:orientation="vertical">
 
     <include
-        android:id="@+id/cursorValue"
+        android:id="@+id/cursor"
         layout="@layout/cursor">
     </include>
 

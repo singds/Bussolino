@@ -73,7 +73,7 @@ class HomeFragment : Fragment() {
         // Osservo lo stato dell'angolo rispetto al nord magnetico.
         // Quando cambia aggiorno il numero visualizzato e la rotazione dell'immagine.
         viewModel.gradiNord.observe(viewLifecycleOwner, { value ->
-            vGradiNord.text = "%d °".format(value)
+            vGradiNord.text = "%d %s".format(value, getString(R.string.udm_gradi))
             imgBussola.rotation = getAngoloImmagine(-value).toFloat()
         })
 

@@ -3,6 +3,7 @@
     <string name="canale_principale">Canale principale</string>
     <string name="tutte_le_notifiche">Tutte le notifiche</string>
     <string name="udm_ms2">m/s²</string>
+    <string name="udm_gradi">°</string>
     <string name="accelerazione_x">Accelerazione x:</string>
     <string name="accelerazione_y">Accelerazione y:</string>
     <string name="accelerazione_z">Accelerazione z:</string>
@@ -16,4 +17,6 @@
     <string name="ok">OK</string>
     <string name="funzionamento_in_background">Quando esci dall\'App l\'acquisizione dati continua in background.\nInterrompi l\'acquisizione chiudendo l\'app della lista delle app recenti.</string>
     <string name="informazione">Informazione</string>
+    <string name="running">Running</string>
+    <string name="stopped">Stopped</string>
 </resources>
