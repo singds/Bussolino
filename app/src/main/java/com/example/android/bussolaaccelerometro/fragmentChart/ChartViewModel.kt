@@ -74,7 +74,9 @@ class ChartViewModel(private val repo: Repository, private val state: SavedState
         // minimo valore visibile sull'asse x
         val xMin: Float,
         // range di valori visibili sull'asse x
-        val xRange: Float
+        val xRange: Float,
+        // il valore evidenziato del grafico se presente
+        val xHighlight: Float?
     ) : Parcelable
 
     companion object {

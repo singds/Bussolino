@@ -13,4 +13,5 @@
     <color name="white">#FFFFFFFF</color>
     <color name="chart_line">@color/primaryColor</color>
     <color name="chart_line_fill">@color/primaryLightColor</color>
+    <color name="chart_highlight">@color/secondaryColor</color>
 </resources>

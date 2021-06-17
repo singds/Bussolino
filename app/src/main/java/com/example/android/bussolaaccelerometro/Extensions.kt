@@ -34,7 +34,7 @@ fun LineChart.performTransformation() {
  * @param xMin minimo valore x visibile (estrema sinistra)
  * @param xRange range di valori visibili sull'asse x.
  */
-fun LineChart.setXMinMax(xMin: Float, xRange: Float) {
+fun LineChart.setXMinAndRange(xMin: Float, xRange: Float) {
     val minScale = viewPortHandler.minScaleX
     val maxScale = viewPortHandler.maxScaleX
 

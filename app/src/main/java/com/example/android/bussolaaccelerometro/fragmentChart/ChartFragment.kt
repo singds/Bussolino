@@ -12,7 +12,6 @@ import androidx.core.content.ContextCompat.getColor
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
 import com.example.android.bussolaaccelerometro.*
-import com.example.android.bussolaaccelerometro.databinding.CursorBinding
 import com.github.mikephil.charting.charts.LineChart
 import com.github.mikephil.charting.components.AxisBase
 import com.github.mikephil.charting.components.XAxis
@@ -194,8 +193,39 @@ class ChartFragment : Fragment() {
         // Lo stato di ciascun grafico include le coordinate dell'intervallo sull'asse X che sta visualizzando.
         val states: MutableList<ChartViewModel.ChartState> = mutableListOf()
         for (chart in allCharts)
-            states.add(ChartViewModel.ChartState(chart.lowestVisibleX, chart.visibleXRange))
+            states.add(getChartState(chart))
         viewModel.saveChartsState(states)
+    }
+
+    /**
+     * Genera un'oggetto che contiene lo stato attuale del grafico.
+     * @param chart il grafico di cui ottenere lo stato
+     */
+    private fun getChartState(chart: LineChart): ChartViewModel.ChartState {
+        var xHighlight: Float? = null
+        if (chart.highlighted != null && chart.highlighted.isNotEmpty()) {
+            xHighlight = chart.highlighted[0].x
+        }
+        return ChartViewModel.ChartState(
+            chart.lowestVisibleX,
+            chart.visibleXRange,
+            xHighlight,
+        )
+    }
+
+    /**
+     * Ripristina lo stato del grafico precedentemente salvato.
+     * @param chart il grafico di cui riprisinare lo stato
+     * @param state lo stato memorizzato del grafico
+     */
+    private fun restoreChartState(chart: LineChart, state: ChartViewModel.ChartState) {
+        chart.setXMinAndRange(state.xMin, state.xRange)
+        if (state.xHighlight != null) {
+            val yHighlight =
+                chart.data.getDataSetByIndex(0).getEntryForXValue(state.xHighlight, 0f).y
+            chart.highlightValue(state.xHighlight, 0)
+            viewHighlightValue(state.xHighlight, yHighlight, "xxx")
+        }
     }
 
     /**
@@ -213,8 +243,7 @@ class ChartFragment : Fragment() {
         val savedChartsState = viewModel.chartsState
         if (savedChartsState != null) {
             for (k in allCharts.indices)
-                allCharts[k].setXMinMax(savedChartsState[k].xMin, savedChartsState[k].xRange)
-            // TODO ripristinare highligh
+                restoreChartState(allCharts[k], savedChartsState[k])
         } else {
             for (chart in allCharts)
                 chart.setXMinMaxFitScreen()
@@ -286,6 +315,9 @@ class ChartFragment : Fragment() {
             // La zona riempita sotto al grafico si estende così dalla linea della curva all'asse x.
             dataSet.setFillFormatter { _, _ -> 0f }
         }
+
+        dataSet.highlightLineWidth = lineWidth
+        dataSet.highLightColor = getColor(requireContext(), R.color.chart_highlight)
 
 
         chart.xAxis.apply {
@@ -404,8 +436,6 @@ class ChartFragment : Fragment() {
     }
 
     private fun viewHighlightValue(x: Float, y: Float, udm: String) {
-
-
         // calcolo il timestamp corrispondente a questo valore
         val timestamp = oldestTimestamp + (x * 1000).toLong()
         val calendar = Calendar.getInstance()
@@ -413,9 +443,7 @@ class ChartFragment : Fragment() {
 
         cursorUdm.text = udm
         cursorValue.text = "%.2f".format(y)
-        cursorTime.text = "%02d/%02d %02d:%02d:%02d".format(
-            calendar.get(Calendar.DAY_OF_MONTH),
-            calendar.get(Calendar.MONTH),
+        cursorTime.text = "%02d:%02d:%02d".format(
             calendar.get(Calendar.HOUR),
             calendar.get(Calendar.MINUTE),
             calendar.get(Calendar.SECOND)
