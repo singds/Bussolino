@@ -7,6 +7,7 @@ import android.view.LayoutInflater
 import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
+import android.widget.TextView
 import androidx.core.content.ContextCompat.getColor
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
@@ -18,8 +19,10 @@ import com.github.mikephil.charting.data.Entry
 import com.github.mikephil.charting.data.LineData
 import com.github.mikephil.charting.data.LineDataSet
 import com.github.mikephil.charting.formatter.ValueFormatter
+import com.github.mikephil.charting.highlight.Highlight
 import com.github.mikephil.charting.listener.ChartTouchListener
 import com.github.mikephil.charting.listener.OnChartGestureListener
+import com.github.mikephil.charting.listener.OnChartValueSelectedListener
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import java.util.*
 import kotlin.collections.ArrayList
@@ -49,6 +52,8 @@ class ChartFragment : Fragment() {
     lateinit var chartAccY: LineChart
     lateinit var chartAccZ: LineChart
     lateinit var chartGradiNord: LineChart
+
+    lateinit var cursorValue: View
 
     // una lista che contiene tutti e quattro grafici
     lateinit var allCharts: List<LineChart>
@@ -82,6 +87,7 @@ class ChartFragment : Fragment() {
         chartAccY = view.findViewById(R.id.chartAccY) as LineChart
         chartAccZ = view.findViewById(R.id.chartAccZ) as LineChart
         chartGradiNord = view.findViewById(R.id.chartGradiNord) as LineChart
+        cursorValue = view.findViewById(R.id.cursorValue)
 
         setupEmptyChart(chartAccX, -12f, 12f, getString(R.string.accelerazione_x_udm))
         setupEmptyChart(chartAccY, -12f, 12f, getString(R.string.accelerazione_y_udm))
@@ -351,6 +357,42 @@ class ChartFragment : Fragment() {
                     "%02d:%02d".format(calendar.get(Calendar.MINUTE), calendar.get(Calendar.SECOND))
             }
             return label
+        }
+    }
+
+    private fun viewHighlightValue(x: Float, y: Float) {
+        val txtTime = cursorValue.findViewById<TextView>(R.id.txtTime)
+        val txtValue = cursorValue.findViewById<TextView>(R.id.txtValue)
+        val txtUdm = cursorValue.findViewById<TextView>(R.id.txtUdm)
+
+        // calcolo il timestamp corrispondente a questo valore
+//        val timestamp = oldestTimestamp + (x * 1000).toLong()
+//        val calendar = Calendar.getInstance()
+//        calendar.time = Date(timestamp)
+
+        txtTime.text = "udm"
+        txtValue.text = "%.2f".format(y)
+//        txtTime.text = "%02d/%02d/%04d %02d:%02d".format()
+    }
+
+    private fun removeAllHighlight() {
+        for (chart in allCharts)
+            chart.highlightValue(0f, -1, false)
+    }
+
+    private inner class ChartValueSelectedListener(val chart: LineChart) :
+        OnChartValueSelectedListener {
+        override fun onValueSelected(e: Entry?, h: Highlight?) {
+            for (c in allCharts) {
+                if (c != chart)
+                    c.highlightValue(0f, -1, false)
+            }
+            e?.let { entry ->
+                viewHighlightValue (entry.x, entry.y)
+            }
+        }
+
+        override fun onNothingSelected() {
         }
     }
 

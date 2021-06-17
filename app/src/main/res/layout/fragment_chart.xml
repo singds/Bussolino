@@ -7,6 +7,11 @@
     tools:context=".fragmentChart.ChartFragment"
     android:orientation="vertical">
 
+    <include
+        android:id="@+id/cursorValue"
+        layout="@layout/cursor">
+    </include>
+
     <androidx.cardview.widget.CardView
         android:layout_width="match_parent"
         android:layout_height="0dp"
