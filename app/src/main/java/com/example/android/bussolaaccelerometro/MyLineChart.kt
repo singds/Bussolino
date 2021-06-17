@@ -6,7 +6,11 @@ import com.github.mikephil.charting.charts.LineChart
 import com.github.mikephil.charting.data.LineDataSet
 import com.github.mikephil.charting.listener.BarLineChartTouchListener
 
-
+/**
+ * [MyLineChart] estende la classe [LineChart] per alcuni campi al grafico.
+ *
+ * Ho cercato per quanto possibile di ampliare le funzionalità dell'oggetto [LineChart] attraverso
+ */
 class MyLineChart(context: Context, attrs: AttributeSet) : LineChart(context, attrs) {
     var yUdm: String = ""
 }

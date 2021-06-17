@@ -42,6 +42,20 @@ import kotlin.collections.ArrayList
  * Il campionamento non viene mai interrotto e continua in background.
  * Ritornando allo stato running lo screenshot viene scartato e riprende la visualizzazione dei campioni
  * acquisti negli ultimi 5 minuti.
+ *
+ * In modalità stopped è anche possibile selezionare con un tap i campioni del grafico per ispezionarli.
+ * Le coordinate del campione selezionato appaiono in una cornice appena sotto la barra di stato.
+ * La cornice visualizza anche lo stato del fragment: running/stopped.
+ *
+ * Per i grafici ho sperimentato varie alternative fra cui
+ * [MPAndroidChart](https://github.com/PhilJay/MPAndroidChart),
+ * [AnyChart](https://www.anychart.com/technical-integrations/samples/android-charts/) e
+ * [GraphView](https://github.com/jjoe64/GraphView).
+ * Alla fine ho selezionato MPAndroidChart.
+ * La decisione è stata complessa perchè nessuna delle librerie soddisfava appeno le mie esigenze.
+ * In generale ho riscontrato API poco chiare e mancanza di documentazione.
+ * La correzione di problemi legati ad MPAndroidChart e l'individualzione di soluzioni per superarli
+ * o nasconderli sono state forse le attività più dispendiose in termini di tempo.
  */
 class ChartFragment : Fragment() {
     private lateinit var viewModel: ChartViewModel
@@ -53,16 +67,20 @@ class ChartFragment : Fragment() {
     private lateinit var chartGradiNord: MyLineChart
 
     /**
-     * Il timestamp che corrisponde al valore 0 nell'asse x.
+     * Il timestamp del primo campione della lista di campioni visualizzati.
+     * È il timestamp del punto con coordinata x = 0 nei grafici.
      */
     private var oldestTimestamp: Long = 0
 
+    /**
+     * I diversi elementi che compongono la piccola cornice appena sotto la status bar.
+     */
     private lateinit var cursorTime: TextView
     private lateinit var cursorValue: TextView
     private lateinit var cursorUdm: TextView
     private lateinit var cursorStatus: TextView
 
-    // una lista che contiene tutti e quattro grafici
+    // lista che contiene tutti e quattro grafici
     private lateinit var allCharts: List<MyLineChart>
 
     /**
@@ -127,6 +145,7 @@ class ChartFragment : Fragment() {
 
         allCharts = listOf(chartAccX, chartAccY, chartAccZ, chartGradiNord)
 
+        // Recupero gli elementi che costituiscono la barra con lo stato del fragment (elemento cursor)
         val cursor = view.findViewById<View>(R.id.cursor)
         cursorTime = cursor.findViewById(R.id.txtTime)
         cursorValue = cursor.findViewById(R.id.txtValue)
@@ -168,6 +187,7 @@ class ChartFragment : Fragment() {
 
 
         // Osservo lo stato running/stopped del fragment e aggiorno di conseguenza l'immagine del FAB.
+        // Aggiorno anche lo stato del fragment sulla cornice superiore.
         viewModel.stopped.observe(viewLifecycleOwner) { stopped ->
             when (stopped) {
                 true -> {
@@ -189,7 +209,7 @@ class ChartFragment : Fragment() {
         super.onPause()
 
         // Quando fragment viene messo in pausa salvo lo stato di tutti i grafici.
-        // Lo stato di ciascun grafico include le coordinate dell'intervallo sull'asse X che sta visualizzando.
+        // Lo stato di ciascun grafico include le coordinate del suo intervallo visibile sull'asse X.
         val states: MutableList<ChartViewModel.ChartState> = mutableListOf()
         for (chart in allCharts)
             states.add(getChartState(chart))
@@ -197,10 +217,14 @@ class ChartFragment : Fragment() {
     }
 
     /**
-     * Genera un'oggetto che contiene lo stato attuale del grafico.
+     * Genera un'oggetto che contiene le informazioni di stato del grafico.
+     * Queste informazioni saranno salvate e ripristinate durante un cambio di configurazione.
+     * Lo stato contiene la finestra visibile del grafico e le coordinate dell'eventuale campione
+     * evidenziato. Vedi [restoreChartState].
      * @param chart il grafico di cui ottenere lo stato
      */
     private fun getChartState(chart: MyLineChart): ChartViewModel.ChartState {
+
         var xHighlight: Float? = null
         if (chart.highlighted != null && chart.highlighted.isNotEmpty()) {
             xHighlight = chart.highlighted[0].x
@@ -213,11 +237,12 @@ class ChartFragment : Fragment() {
     }
 
     /**
-     * Ripristina lo stato del grafico precedentemente salvato.
-     * @param chart il grafico di cui riprisinare lo stato
+     * Ripristina lo stato del grafico precedentemente salvato. Vedi [getChartState].
+     * @param chart il grafico di cui ripristinare lo stato
      * @param state lo stato memorizzato del grafico
      */
     private fun restoreChartState(chart: MyLineChart, state: ChartViewModel.ChartState) {
+
         chart.setXMinAndRange(state.xMin, state.xRange)
         if (state.xHighlight != null) {
             val yHighlight =
@@ -232,6 +257,7 @@ class ChartFragment : Fragment() {
      * @param list lo screenshot statico dello storico dei campioni.
      */
     private fun setChartsInStoppedMode(list: List<SensorSample>) {
+
         // I grafici visualizzano uno screenshot dei campioni.
         setSensorSamplesInCharts(list)
 
@@ -248,6 +274,7 @@ class ChartFragment : Fragment() {
                 chart.setXMinMaxFitScreen()
         }
 
+        // Modifico alcune configurazioni che sono diverse in running/stopped
         for (chart in allCharts) {
             chart.setVisibleXRangeMinimum(1f) // 1 secondo di minimo intervallo visualizzabile sull'asse x
             chart.isDragXEnabled = true
@@ -262,10 +289,12 @@ class ChartFragment : Fragment() {
      * @param list la lista dinamica dello storico dei campioni.
      */
     private fun setChartsInRunningMode(list: List<SensorSample>) {
+
         setSensorSamplesInCharts(list)
 
         removeAllHighlight()
 
+        // Modifico alcune configurazioni che sono diverse in running/stopped
         for (chart in allCharts) {
             chart.stopAnimations()
             chart.isDragXEnabled = false
@@ -287,7 +316,7 @@ class ChartFragment : Fragment() {
      * @param yUdm unità di misura dell'asse y
      * @param fill (default true) true per riempire con un colore chiaro la zona compresa fra la
      * curva del grafico e l'asse x.
-     * @param lineWidth spessore della linea (1 = spessore di default)
+     * @param lineWidth (default 1.3) spessore della linea (1 = spessore standard della libreria)
      */
     private fun setupEmptyChart(
         chart: MyLineChart,
@@ -315,12 +344,13 @@ class ChartFragment : Fragment() {
             dataSet.setFillFormatter { _, _ -> 0f }
         }
 
+        // Aumento lo spessore della linea arancione che evidenzia un campione.
         dataSet.highlightLineWidth = lineWidth
         dataSet.highLightColor = getColor(requireContext(), R.color.chart_highlight)
 
 
         chart.xAxis.apply {
-            // granularity = 1f garantisce che le label nell'asse x siano distanziate di almeno 1 sec
+            // granularity = 1f garantisce che le label nell'asse x siano distanziate di almeno 1 sec.
             granularity = 1f
             isGranularityEnabled = true
             position = XAxis.XAxisPosition.BOTTOM
@@ -331,11 +361,15 @@ class ChartFragment : Fragment() {
             axisMaximum = yMax
             axisMinimum = yMin
         }
+
+        // Salvo l'unità di misura dell'asse y all'interno del grafico.
+        // Questo campo non è presente in LineChart.
+        // Ho creato la sottoclasse MyLineChart di LineChart appositamente per aggiungere questa informazione.
+        // La utilizzero per aggiornare la visualizzazione del campione evidenziato.
         chart.yUdm = yUdm
 
         chart.setOnChartValueSelectedListener(ChartValueSelectedListener(chart))
 
-        //chart.isDragDecelerationEnabled = false
         chart.description.isEnabled = false
         chart.isHighlightPerDragEnabled = false
         chart.isHighlightPerTapEnabled = false
