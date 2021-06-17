@@ -7,9 +7,13 @@ import com.github.mikephil.charting.data.LineDataSet
 import com.github.mikephil.charting.listener.BarLineChartTouchListener
 
 /**
- * [MyLineChart] estende la classe [LineChart] per alcuni campi al grafico.
+ * [MyLineChart] estende la classe [LineChart] aggiungendo alcuni campi al grafico.
  *
  * Ho cercato per quanto possibile di ampliare le funzionalità dell'oggetto [LineChart] attraverso
+ * Extension functions e Extension properties.
+ * Con le estensioni non è possibile però aggiungere veri e propri campi, cioè field che occupano
+ * spazio in memoria e incrementano la size dell'oggetto (backing field).
+ * Ho quindi esteso LineChart per includere le informazioni di cui avevo bisogno.
  */
 class MyLineChart(context: Context, attrs: AttributeSet) : LineChart(context, attrs) {
     var yUdm: String = ""

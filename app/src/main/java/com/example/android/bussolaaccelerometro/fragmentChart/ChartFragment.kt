@@ -395,7 +395,7 @@ class ChartFragment : Fragment() {
         yValues: List<Float>,
         xTimes: List<Float>,
     ) {
-        // Recuper i dati attualmente visualizzati nel grafico.
+        // Recupero i dati attualmente visualizzati nel grafico.
         val chartData = chart.data
         val dataSet = chartData.getDataSetByIndex(0) as LineDataSet
 
@@ -415,7 +415,7 @@ class ChartFragment : Fragment() {
     }
 
     /**
-     * Visualizza sui grafici la lista di campioni fornita.
+     * Visualizza su tutti e quatto i grafici la lista di campioni fornita.
      * @param list lista di campioni da visualizzare.
      */
     private fun setSensorSamplesInCharts(list: List<SensorSample>) {
@@ -424,11 +424,14 @@ class ChartFragment : Fragment() {
         // Sono così costretto ad usare dei float per rappresentare gli istanti temporali.
         oldestTimestamp = list[list.size - 1].timestamp.time
 
+        // Scompongo la lista di campioni in liste separate.
         val listAccX = list.map { value -> value.accelX }
         val listAccY = list.map { value -> value.accelY }
         val listAccZ = list.map { value -> value.accelZ }
         val listGradiNord = list.map { value -> value.gradiNord }
 
+        // Calcolo le coordinate x dei punti (valori float) da utilizzare nel grafico al posto del
+        // timestamp.
         val xValues = ArrayList<Float>()
         for (elem in list) {
             val floatTime = (elem.timestamp.time - oldestTimestamp) / 1000f
@@ -442,7 +445,7 @@ class ChartFragment : Fragment() {
     }
 
     /**
-     * Un formatter che restituisce le stringhe da visualizzare come label dell'asse x.
+     * Un formatter che restituisce le stringhe da visualizzare come label sull'asse x.
      */
     inner class XAxisFormatter : ValueFormatter() {
         /**
@@ -468,23 +471,33 @@ class ChartFragment : Fragment() {
         }
     }
 
+    /**
+     * Aggiorna i campi della cornice superiore per visualizzare il punto specificato.
+     * @param x coordinata x del punto
+     * @param y coordinata y del punto
+     * @param udm unità di misura del valore *y*
+     */
     private fun viewHighlightValue(x: Float, y: Float, udm: String) {
-        // calcolo il timestamp corrispondente a questo valore
+
+        // Calcolo il timestamp corrispondente alla coordinata x del punto
         val timestamp = oldestTimestamp + (x * 1000).toLong()
         val calendar = Calendar.getInstance()
         calendar.time = Date(timestamp)
 
+        // Aggiorno gli elementi della barra superiore.
         cursorUdm.text = udm
         cursorValue.text = "%.2f".format(y)
-        cursorTime.text = "%02d:%02d:%02d".format(
-            calendar.get(Calendar.HOUR),
+        cursorTime.text = "%02d:%02d:%02d : %02d".format(
+            calendar.get(Calendar.HOUR_OF_DAY),
             calendar.get(Calendar.MINUTE),
-            calendar.get(Calendar.SECOND)
+            calendar.get(Calendar.SECOND),
+            calendar.get(Calendar.MILLISECOND) / 10
         )
     }
 
     /**
      * Rimuove l'highlight da tutti i grafici.
+     * Se c'era un campione evidenziato cancella le sue informazioni dalla barra di stato superiore.
      */
     private fun removeAllHighlight() {
         for (chart in allCharts)
@@ -494,10 +507,16 @@ class ChartFragment : Fragment() {
         cursorTime.text = ""
     }
 
+    /**
+     * Un listener che notifica quando l'utente evidenzia un campione.
+     * @param chart il grafiche che sta osservando questo listener
+     */
     private inner class ChartValueSelectedListener(val chart: MyLineChart) :
         OnChartValueSelectedListener {
         override fun onValueSelected(e: Entry?, h: Highlight?) {
+
             // Rimuovo l'Highlight da tutti gli altri grafici diversi da quello appena selezionato.
+            // Poi mostro le informazioni del campione selezionato sulla barra superiore.
             for (c in allCharts) {
                 if (c != chart)
                     c.highlightValue(0f, -1, false)
@@ -559,11 +578,10 @@ class ChartFragment : Fragment() {
          * Quando questo grafico viene zoomato eseguo lo stesso zoom su tutti gli altri
          * grafici collegati.
          * @param me
-         * @param scaleX scalefactor on the x-axis
-         * @param scaleY scalefactor on the y-axis
+         * @param scaleX scale factor on the x-axis
+         * @param scaleY scale factor on the y-axis
          */
         override fun onChartScale(me: MotionEvent?, scaleX: Float, scaleY: Float) {
-            Log.d(LOG_TAG, "onChartScale  $chart")
             alignChartsAndSetCirclesVisibility()
         }
 
@@ -576,7 +594,6 @@ class ChartFragment : Fragment() {
          * @param dY translation distance on the y-axis
          */
         override fun onChartTranslate(me: MotionEvent?, dX: Float, dY: Float) {
-            Log.d(LOG_TAG, "onChartTranslate  $chart")
             alignChartsAndSetCirclesVisibility()
         }
 
@@ -610,7 +627,7 @@ class ChartFragment : Fragment() {
             val dstVals = FloatArray(9)
 
             // get src chart translation matrix:
-            val srcMatrix: Matrix = chart.viewPortHandler.matrixTouch
+            val srcMatrix: Matrix = srcChart.viewPortHandler.matrixTouch
             srcMatrix.getValues(srcVals)
 
             // apply X axis scaling and position to dst charts:

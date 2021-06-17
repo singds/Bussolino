@@ -15,14 +15,30 @@ import java.util.Observer
  */
 class ChartViewModel(private val repo: Repository, private val state: SavedStateHandle) :
     ViewModel() {
+
+    // true quando il chart è in modalità stopped
     val stopped: LiveData<Boolean> = state.getLiveData(STATE_STOPPED, false)
 
+    /**
+     * La lista dei campioni che sono visibili sui grafici.
+     * Il fragment osserva questa lista e quando cambia aggiorna i grafici.
+     * In modalità running contiene lo storico realtime dei campioni.
+     * In modalità stopped contiene uno screenshot della lista dei campioni.
+     */
     private val pChartSampleList = MutableLiveData<List<SensorSample>>()
     val chartSampleList: LiveData<List<SensorSample>> by ::pChartSampleList
 
+    /**
+     * Lista che contiene lo stato dei 4 grafici.
+     * Viene memorizzata nell'instance state.
+     */
     private var pChartsState: List<ChartState>? = state.get(STATE_CHARTS)
     val chartsState: List<ChartState>? by ::pChartsState
 
+
+    // Observer che gestisce la disponibilità di nuovi campioni.
+    // Appena è pronta una nuova lista, se sono in running, prelevo la lista dal repository e aggiorno
+    // quella a disposizione dei grafici.
     private val newListSampleObserver: Observer =
         Observer { _, _ ->
             repo.listSample.let {
@@ -35,7 +51,7 @@ class ChartViewModel(private val repo: Repository, private val state: SavedState
     init {
         repo.newListSampleAvailable.addObserver(newListSampleObserver)
         if (stopped.value == true) {
-            pChartSampleList.value = state.get(STATE_SAMPLE_LIST_ON_PAUSE)
+            pChartSampleList.value = state.get(STATE_SAMPLE_LIST_STOPPED)
         } else {
             pChartSampleList.value = repo.listSample
         }
@@ -48,9 +64,17 @@ class ChartViewModel(private val repo: Repository, private val state: SavedState
      */
     override fun onCleared() {
         super.onCleared()
+
+        // Smetto di osservare la lista dei campioni
         repo.newCurrentSampleAvailable.deleteObserver(newListSampleObserver)
     }
 
+    /**
+     * Chiamata dal fragment per notificare la pressione del FAB play/pausa.
+     * Il viewModel implementa la logica dietro il pulsante.
+     * Cambia lo stato del fragment (running/stopped) e fa uno screenshot della lista dei campioni
+     * entrando nello stato stopped.
+     */
     fun onClickPlayPause() {
         state.set(STATE_STOPPED, stopped.value != true)
         if (stopped.value == true) {
@@ -59,16 +83,23 @@ class ChartViewModel(private val repo: Repository, private val state: SavedState
             saveChartsState(null)
 
             val listSnapshot = repo.listSample.toList()
-            state.set(STATE_SAMPLE_LIST_ON_PAUSE, listSnapshot)
+            state.set(STATE_SAMPLE_LIST_STOPPED, listSnapshot)
             pChartSampleList.value = listSnapshot
         }
     }
 
+    /**
+     * Invocato dal fragment per richiedere la memorizzazione dello stato dei grafici.
+     * Lo stato dei grafici viene memorizzato nell'instance state.
+     */
     fun saveChartsState(states: List<ChartState>?) {
         state.set(STATE_CHARTS, states)
         pChartsState = states
     }
 
+    /**
+     * Data class che racchiude le informazioni di stato di un grafico.
+     */
     @Parcelize
     data class ChartState(
         // minimo valore visibile sull'asse x
@@ -81,7 +112,7 @@ class ChartViewModel(private val repo: Repository, private val state: SavedState
 
     companion object {
         const val STATE_STOPPED = "stopped"
-        const val STATE_SAMPLE_LIST_ON_PAUSE = "sampleListOnPause"
+        const val STATE_SAMPLE_LIST_STOPPED = "sampleListStopped"
         const val STATE_CHARTS = "charts"
     }
 }
