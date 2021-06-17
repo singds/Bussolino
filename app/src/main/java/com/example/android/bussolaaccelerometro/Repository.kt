@@ -2,8 +2,6 @@ package com.example.android.bussolaaccelerometro
 
 import android.content.Context
 import android.content.SharedPreferences
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.MutableLiveData
 import java.util.*
 
 /**
@@ -107,10 +105,10 @@ class Repository(private val context: Context) {
     }
 
     companion object {
-        /**
-         * Shared Preferences key: true quando il campionamento in background è abilitato.
-         */
-        private const val PREFERENCE_ENABLE_RECORD = "enableRecord"
+//        /**
+//         * Shared Preferences key: true quando il campionamento in background è abilitato.
+//         */
+//        private const val PREFERENCE_ENABLE_RECORD = "enableRecord"
 
         /**
          * Shared Preferences key: true quando il popup di informazione sul campionamento in

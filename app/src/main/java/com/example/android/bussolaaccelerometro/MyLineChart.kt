@@ -32,7 +32,7 @@ fun LineChart.stopAnimations() {
  */
 fun LineChart.performTransformation() {
     val listener = onTouchListener as BarLineChartTouchListener
-    viewPortHandler.refresh(listener.matrix, this, false);
+    viewPortHandler.refresh(listener.matrix, this, false)
 }
 
 /**

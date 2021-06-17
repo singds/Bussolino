@@ -2,7 +2,6 @@ package com.example.android.bussolaaccelerometro.fragmentHome
 
 import androidx.lifecycle.*
 import com.example.android.bussolaaccelerometro.Repository
-import com.example.android.bussolaaccelerometro.SensorSample
 import java.util.Observer
 import kotlin.math.roundToInt
 
@@ -11,16 +10,16 @@ import kotlin.math.roundToInt
  * Il viewModel recupera i dati grezzi e li trasforma preparandoli per la visualizzazione.
  */
 class HomeViewModel(private val repo: Repository) : ViewModel() {
-    val pAccelX = MutableLiveData<Float>(0f)
+    private val pAccelX = MutableLiveData(0f)
     val accelX: LiveData<Float> by ::pAccelX
 
-    val pAccelY = MutableLiveData<Float>(0f)
+    private val pAccelY = MutableLiveData(0f)
     val accelY: LiveData<Float> by ::pAccelY
 
-    val pAccelZ = MutableLiveData<Float>(0f)
+    private val pAccelZ = MutableLiveData(0f)
     val accelZ: LiveData<Float> by ::pAccelZ
 
-    val pGradiNord = MutableLiveData<Int>(0)
+    private val pGradiNord = MutableLiveData(0)
     val gradiNord: LiveData<Int> by ::pGradiNord
 
     // Quando è disponibile un nuovo campione ne estraggo le singole componenti e le dispongo in

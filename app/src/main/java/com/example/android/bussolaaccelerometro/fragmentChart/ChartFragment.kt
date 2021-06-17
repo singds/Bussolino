@@ -12,7 +12,6 @@ import androidx.core.content.ContextCompat.getColor
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
 import com.example.android.bussolaaccelerometro.*
-import com.github.mikephil.charting.charts.LineChart
 import com.github.mikephil.charting.components.AxisBase
 import com.github.mikephil.charting.components.XAxis
 import com.github.mikephil.charting.data.Entry
@@ -129,9 +128,9 @@ class ChartFragment : Fragment() {
         allCharts = listOf(chartAccX, chartAccY, chartAccZ, chartGradiNord)
 
         val cursor = view.findViewById<View>(R.id.cursor)
-        cursorTime = cursor.findViewById<TextView>(R.id.txtTime)
-        cursorValue = cursor.findViewById<TextView>(R.id.txtValue)
-        cursorUdm = cursor.findViewById<TextView>(R.id.txtUdm)
+        cursorTime = cursor.findViewById(R.id.txtTime)
+        cursorValue = cursor.findViewById(R.id.txtValue)
+        cursorUdm = cursor.findViewById(R.id.txtUdm)
         cursorStatus = cursor.findViewById(R.id.txtStatus)
 
 
@@ -356,7 +355,6 @@ class ChartFragment : Fragment() {
      * @param chart grafico da aggiornare.
      * @param yValues lista di coordinate y per i punti del grafico.
      * @param xTimes lista di coordinate x per i punti del grafico.
-     * @param oldestTimestamp timestamp del primo punto della lista.
      */
     private fun setChartSamples(
         chart: MyLineChart,
@@ -531,7 +529,7 @@ class ChartFragment : Fragment() {
          * @param scaleY scalefactor on the y-axis
          */
         override fun onChartScale(me: MotionEvent?, scaleX: Float, scaleY: Float) {
-            Log.d(LOG_TAG, "onChartScale  ${chart.toString()}")
+            Log.d(LOG_TAG, "onChartScale  $chart")
             alignChartsAndSetCirclesVisibility()
         }
 
@@ -544,7 +542,7 @@ class ChartFragment : Fragment() {
          * @param dY translation distance on the y-axis
          */
         override fun onChartTranslate(me: MotionEvent?, dX: Float, dY: Float) {
-            Log.d(LOG_TAG, "onChartTranslate  ${chart.toString()}")
+            Log.d(LOG_TAG, "onChartTranslate  $chart")
             alignChartsAndSetCirclesVisibility()
         }
 
@@ -582,7 +580,7 @@ class ChartFragment : Fragment() {
             srcMatrix.getValues(srcVals)
 
             // apply X axis scaling and position to dst charts:
-            var dstMatrix: Matrix = dstChart.viewPortHandler.matrixTouch
+            val dstMatrix: Matrix = dstChart.viewPortHandler.matrixTouch
             dstMatrix.getValues(dstVals)
 
             dstVals[Matrix.MSCALE_X] = srcVals[Matrix.MSCALE_X]
