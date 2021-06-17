@@ -45,26 +45,26 @@ import kotlin.collections.ArrayList
  * acquisti negli ultimi 5 minuti.
  */
 class ChartFragment : Fragment() {
-    lateinit var viewModel: ChartViewModel
+    private lateinit var viewModel: ChartViewModel
 
     // i quattro grafici
-    lateinit var chartAccX: LineChart
-    lateinit var chartAccY: LineChart
-    lateinit var chartAccZ: LineChart
-    lateinit var chartGradiNord: LineChart
+    private lateinit var chartAccX: MyLineChart
+    private lateinit var chartAccY: MyLineChart
+    private lateinit var chartAccZ: MyLineChart
+    private lateinit var chartGradiNord: MyLineChart
 
     /**
      * Il timestamp che corrisponde al valore 0 nell'asse x.
      */
-    var oldestTimestamp: Long = 0
+    private var oldestTimestamp: Long = 0
 
-    lateinit var cursorTime: TextView
-    lateinit var cursorValue: TextView
-    lateinit var cursorUdm: TextView
-    lateinit var cursorStatus: TextView
+    private lateinit var cursorTime: TextView
+    private lateinit var cursorValue: TextView
+    private lateinit var cursorUdm: TextView
+    private lateinit var cursorStatus: TextView
 
     // una lista che contiene tutti e quattro grafici
-    lateinit var allCharts: List<LineChart>
+    private lateinit var allCharts: List<MyLineChart>
 
     /**
      * Called to have the fragment instantiate its user interface view.
@@ -91,10 +91,10 @@ class ChartFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
 
         // Recupero i riferimenti ai quattro grafici e li inizializzo.
-        chartAccX = view.findViewById(R.id.chartAccX) as LineChart
-        chartAccY = view.findViewById(R.id.chartAccY) as LineChart
-        chartAccZ = view.findViewById(R.id.chartAccZ) as LineChart
-        chartGradiNord = view.findViewById(R.id.chartGradiNord) as LineChart
+        chartAccX = view.findViewById(R.id.chartAccX) as MyLineChart
+        chartAccY = view.findViewById(R.id.chartAccY) as MyLineChart
+        chartAccZ = view.findViewById(R.id.chartAccZ) as MyLineChart
+        chartGradiNord = view.findViewById(R.id.chartGradiNord) as MyLineChart
 
         setupEmptyChart(
             chartAccX,
@@ -201,7 +201,7 @@ class ChartFragment : Fragment() {
      * Genera un'oggetto che contiene lo stato attuale del grafico.
      * @param chart il grafico di cui ottenere lo stato
      */
-    private fun getChartState(chart: LineChart): ChartViewModel.ChartState {
+    private fun getChartState(chart: MyLineChart): ChartViewModel.ChartState {
         var xHighlight: Float? = null
         if (chart.highlighted != null && chart.highlighted.isNotEmpty()) {
             xHighlight = chart.highlighted[0].x
@@ -218,13 +218,13 @@ class ChartFragment : Fragment() {
      * @param chart il grafico di cui riprisinare lo stato
      * @param state lo stato memorizzato del grafico
      */
-    private fun restoreChartState(chart: LineChart, state: ChartViewModel.ChartState) {
+    private fun restoreChartState(chart: MyLineChart, state: ChartViewModel.ChartState) {
         chart.setXMinAndRange(state.xMin, state.xRange)
         if (state.xHighlight != null) {
             val yHighlight =
                 chart.data.getDataSetByIndex(0).getEntryForXValue(state.xHighlight, 0f).y
             chart.highlightValue(state.xHighlight, 0)
-            viewHighlightValue(state.xHighlight, yHighlight, "xxx")
+            viewHighlightValue(state.xHighlight, yHighlight, chart.yUdm)
         }
     }
 
@@ -291,7 +291,7 @@ class ChartFragment : Fragment() {
      * @param lineWidth spessore della linea (1 = spessore di default)
      */
     private fun setupEmptyChart(
-        chart: LineChart,
+        chart: MyLineChart,
         yMin: Float,
         yMax: Float,
         label: String,
@@ -332,8 +332,9 @@ class ChartFragment : Fragment() {
             axisMaximum = yMax
             axisMinimum = yMin
         }
+        chart.yUdm = yUdm
 
-        chart.setOnChartValueSelectedListener(ChartValueSelectedListener(chart, yUdm))
+        chart.setOnChartValueSelectedListener(ChartValueSelectedListener(chart))
 
         //chart.isDragDecelerationEnabled = false
         chart.description.isEnabled = false
@@ -358,7 +359,7 @@ class ChartFragment : Fragment() {
      * @param oldestTimestamp timestamp del primo punto della lista.
      */
     private fun setChartSamples(
-        chart: LineChart,
+        chart: MyLineChart,
         yValues: List<Float>,
         xTimes: List<Float>,
     ) {
@@ -461,7 +462,7 @@ class ChartFragment : Fragment() {
         cursorTime.text = ""
     }
 
-    private inner class ChartValueSelectedListener(val chart: LineChart, val yUdm: String) :
+    private inner class ChartValueSelectedListener(val chart: MyLineChart) :
         OnChartValueSelectedListener {
         override fun onValueSelected(e: Entry?, h: Highlight?) {
             // Rimuovo l'Highlight da tutti gli altri grafici diversi da quello appena selezionato.
@@ -470,7 +471,7 @@ class ChartFragment : Fragment() {
                     c.highlightValue(0f, -1, false)
             }
             e?.let { entry ->
-                viewHighlightValue(entry.x, entry.y, yUdm)
+                viewHighlightValue(entry.x, entry.y, chart.yUdm)
             }
         }
 
@@ -486,7 +487,10 @@ class ChartFragment : Fragment() {
      * @param relatedCharts la lista di grafici collegati. Quando *chart* subisce una trasformazione
      * tutti i grafici di questa lista la subiscono a loro volta.
      */
-    private class ChartGestureListener(val chart: LineChart, val relatedCharts: List<LineChart>) :
+    private class ChartGestureListener(
+        val chart: MyLineChart,
+        val relatedCharts: List<MyLineChart>
+    ) :
         OnChartGestureListener {
 
         override fun onChartGestureStart(
@@ -567,7 +571,7 @@ class ChartFragment : Fragment() {
          * @param dstChart grafico di destinazione
          * @param srcChart grafico sorgente
          */
-        private fun alignChart(dstChart: LineChart, srcChart: LineChart) {
+        private fun alignChart(dstChart: MyLineChart, srcChart: MyLineChart) {
             dstChart.stopAnimations()
 
             val srcVals = FloatArray(9)

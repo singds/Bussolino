@@ -30,7 +30,7 @@
                 android:layout_margin="2dp"
                 android:layout_weight="1">
 
-                <com.github.mikephil.charting.charts.LineChart
+                <com.example.android.bussolaaccelerometro.MyLineChart
                     android:id="@+id/chartAccX"
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
@@ -42,7 +42,7 @@
                 android:layout_margin="2dp"
                 android:layout_weight="1">
 
-                <com.github.mikephil.charting.charts.LineChart
+                <com.example.android.bussolaaccelerometro.MyLineChart
                     android:id="@+id/chartAccY"
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
@@ -62,7 +62,7 @@
                 android:layout_margin="2dp"
                 android:layout_weight="1">
 
-                <com.github.mikephil.charting.charts.LineChart
+                <com.example.android.bussolaaccelerometro.MyLineChart
                     android:id="@+id/chartAccZ"
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
@@ -74,7 +74,7 @@
                 android:layout_margin="2dp"
                 android:layout_weight="1">
 
-                <com.github.mikephil.charting.charts.LineChart
+                <com.example.android.bussolaaccelerometro.MyLineChart
                     android:id="@+id/chartGradiNord"
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"

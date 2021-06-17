@@ -1,8 +1,15 @@
 package com.example.android.bussolaaccelerometro
 
+import android.content.Context
+import android.util.AttributeSet
 import com.github.mikephil.charting.charts.LineChart
 import com.github.mikephil.charting.data.LineDataSet
 import com.github.mikephil.charting.listener.BarLineChartTouchListener
+
+
+class MyLineChart(context: Context, attrs: AttributeSet) : LineChart(context, attrs) {
+    var yUdm: String = ""
+}
 
 /**
  * Interrompi l'animazione del grafico.
