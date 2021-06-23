@@ -61,6 +61,9 @@ class ReaderService : Service(),
      */
     private var lastMagne = FloatArray(3)
 
+    // ultima accuratezza letta dal magnetometro
+    private var lastMagneAccuracy = SensorManager.SENSOR_STATUS_ACCURACY_HIGH
+
     /**
      * Peso del filtro sulle componenti grezze dell'accelerometro.
      * Intervallo ammissibile [0-1].
@@ -246,12 +249,13 @@ class ReaderService : Service(),
                 // Il repository contiene un singolo campione che rappresenta lo stato realtime
                 // dei sensori.
                 // Aggiorno il campione con i nuovi valori.
-                repo.putSensorSampleToCurrent(getLastSample())
+                repo.putSensorSampleToCurrent(getLastSample(),lastMagneAccuracy)
             }
             if (sensor.type == Sensor.TYPE_MAGNETIC_FIELD) {
                 lastMagne[0] = filtroMagne(lastMagne[0], values[0])
                 lastMagne[1] = filtroMagne(lastMagne[1], values[1])
                 lastMagne[2] = filtroMagne(lastMagne[2], values[2])
+                lastMagneAccuracy = accuracy
             }
         }
     }

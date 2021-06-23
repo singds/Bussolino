@@ -2,6 +2,7 @@ package com.example.android.bussolaaccelerometro
 
 import android.content.Context
 import android.content.SharedPreferences
+import android.hardware.SensorManager
 import java.util.*
 
 /**
@@ -59,6 +60,9 @@ class Repository(private val context: Context) {
     private var pCurrentSample = SensorSample(0f, 0f, 0f, 0f, Date())
     // Versione del campo pCurrentSample, accessibile solo in lettura
     val currentSample: SensorSample get() = pCurrentSample
+    private var pCurrentMagneAccuracy:Int = SensorManager.SENSOR_STATUS_ACCURACY_HIGH
+    // valore di accuratezza del magnetometro legato all'ultimo campione
+    val currentMagneAccuracy by ::pCurrentMagneAccuracy
 
     // Un oggetto osservabile che notifica gli osservatore quando è disponibile un nuovo campione realtime.
     val newCurrentSampleAvailable = object : Observable() {
@@ -87,9 +91,11 @@ class Repository(private val context: Context) {
     /**
      * Aggiorna i dati realtime dei sensori.
      * @param sample campione con i nuovi dati acquisiti dai sensori.
+     * @param magneAccuracy valore di accuratezza del magnetometro.
      */
-    fun putSensorSampleToCurrent(sample: SensorSample) {
+    fun putSensorSampleToCurrent(sample: SensorSample, magneAccuracy: Int) {
         pCurrentSample = sample
+        pCurrentMagneAccuracy = magneAccuracy
 
         newCurrentSampleAvailable.notifyObservers()
     }

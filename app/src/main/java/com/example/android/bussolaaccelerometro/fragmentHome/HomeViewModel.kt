@@ -22,6 +22,9 @@ class HomeViewModel(private val repo: Repository) : ViewModel() {
     private val pGradiNord = MutableLiveData(0)
     val gradiNord: LiveData<Int> by ::pGradiNord
 
+    // rendo disponibile al fragment l'accuratezza dell'ultima lettura del magnetometro
+    val magneAccuracy by repo::currentMagneAccuracy
+
     // Quando è disponibile un nuovo campione ne estraggo le singole componenti e le dispongo in
     // una serie di campi facilmente utilizzabili dalla UI.
     private val newCurrentSampleObserver: Observer =

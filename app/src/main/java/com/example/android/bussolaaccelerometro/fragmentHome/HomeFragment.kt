@@ -1,5 +1,6 @@
 package com.example.android.bussolaaccelerometro.fragmentHome
 
+import android.hardware.SensorManager
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.Surface
@@ -7,6 +8,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.TextView
+import androidx.cardview.widget.CardView
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.constraintlayout.widget.ConstraintSet
 import androidx.fragment.app.Fragment
@@ -21,6 +23,9 @@ import com.google.android.material.floatingactionbutton.FloatingActionButton
 /**
  * [HomeFragment] visualizza le 3 accelerazioni (x,y,z) a cui è sottoposto il dispositivo e una
  * bussola che punta a nord.
+ * Quando i valori letti dal magnetometro diventano inaffidabili, in sostituzione alla bussola
+ * vengono mostrati un'immagine e un messaggio che indicano all'utente di ruotare il dispositivo
+ * per eseguire la calibrazione del sensore.
  * Nel fragment è presente un FAB che permette di passare alla schermata di visualizzazione dei
  * grafici.
  */
@@ -66,6 +71,7 @@ class HomeFragment : Fragment() {
         val imgBussola = view.findViewById<ImageView>(R.id.imgBussola)
 //        val switchAbilita = view.findViewById<SwitchCompat>(R.id.switchAbilita)
         val fabChart = view.findViewById<FloatingActionButton>(R.id.fabChart)
+        val cardCalibrazione = view.findViewById<CardView>(R.id.cardCalibrazione)
 
 
         // Osservo lo stato dell'angolo rispetto al nord magnetico.
@@ -73,6 +79,13 @@ class HomeFragment : Fragment() {
         viewModel.gradiNord.observe(viewLifecycleOwner, { value ->
             vGradiNord.text = "%d %s".format(value, getString(R.string.udm_gradi))
             imgBussola.rotation = getAngoloImmagine(-value).toFloat()
+
+            // in base all'accuratezza dell'ultima lettura decido se rendere visibile o meno
+            // la card che chiede all'utente di effettuare la calibrazione.
+            if(viewModel.magneAccuracy < SensorManager.SENSOR_STATUS_ACCURACY_LOW)
+                cardCalibrazione.visibility = View.VISIBLE
+            else
+                cardCalibrazione.visibility = View.INVISIBLE
         })
 
 
