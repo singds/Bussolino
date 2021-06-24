@@ -37,9 +37,17 @@ class HomeViewModel(private val repo: Repository) : ViewModel() {
             }
         }
 
+    private val pEvent = MutableLiveData<String?>()
+    val event: LiveData<String?> by ::pEvent
+
     init {
         // Mi registro per essere notificato quando un nuovo campione è disponibile.
         repo.newCurrentSampleAvailable.addObserver(newCurrentSampleObserver)
+
+        // Se il dialog con le informazioni sul funzionamento in background non è ancora stato
+        // visto e confermato dall'utente lo mostro.
+        if (!repo.dialogInfoDone)
+            pEvent.value = EVENT_SHOW_DIALOG_INFO
     }
 
     /**
@@ -51,11 +59,6 @@ class HomeViewModel(private val repo: Repository) : ViewModel() {
         super.onCleared()
         // Cancello la registrazione quando il viewModel viene distrutto.
         repo.newCurrentSampleAvailable.deleteObserver(newCurrentSampleObserver)
-
-        // Se il dialog con le informazioni sul funzionamento in background non è ancora stato
-        // visto e confermato dall'utente lo mostro.
-        if (!repo.dialogInfoDone)
-            pEvent.value = EVENT_SHOW_DIALOG_INFO
     }
 
     //    /**
@@ -64,9 +67,6 @@ class HomeViewModel(private val repo: Repository) : ViewModel() {
 //     * ridiretto verso un campo di un'altra classe.
 //     */
 //    var enableRecordInBackground by repo::enableRecordInBackground
-
-    private val pEvent = MutableLiveData<String?>()
-    val event: LiveData<String?> by ::pEvent
 
     /**
      * Chiamato dalla view quando viene premuto il FAB chart.

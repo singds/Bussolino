@@ -15,7 +15,7 @@
     <string name="bussolino_ti_sta_monitorando">Bussolino ti sta tracciando !</string>
     <string name="registrazione_in_background">Registrazione in background</string>
     <string name="ok">OK</string>
-    <string name="funzionamento_in_background">Quando esci dall\'App l\'acquisizione dati continua in background.\nInterrompi l\'acquisizione chiudendo l\'app della lista delle app recenti.</string>
+    <string name="funzionamento_in_background">Quando esci dall\'App, l\'acquisizione dati continua in background.\nInterrompi l\'acquisizione chiudendo l\'app della lista delle app recenti.</string>
     <string name="informazione">Informazione</string>
     <string name="running">Running</string>
     <string name="stopped">Stopped</string>
