@@ -11,6 +11,7 @@ import android.widget.TextView
 import androidx.core.content.ContextCompat.getColor
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
+import androidx.savedstate.SavedStateRegistry
 import com.example.android.bussolaaccelerometro.*
 import com.github.mikephil.charting.components.AxisBase
 import com.github.mikephil.charting.components.XAxis
@@ -101,6 +102,41 @@ class ChartFragment : Fragment() {
         return inflater.inflate(R.layout.fragment_chart, container, false)
     }
 
+
+    /**
+     * Questa classe è solo un piccolo esempio di utilizzo del meccanismo SavedStateRegistry.
+     * https://developer.android.com/topic/libraries/architecture/saving-states#savedstateregistry
+     * La classe incapsula il salvataggio dell'instance state della top bar.
+     * L'oggetto viene creato all'interno del fragment e gli viene passato il SavedStateRegistry
+     * associato al Fragment. Questo oggetto si registra per fornire un suo bundle da salvare
+     * nello stato di istanza al momento opportuno.
+     * @param registry il registro su cui salvare l'instance state.
+     * @param key la chiave del bundle che questo oggetto aggiungerà al registry.
+     */
+    inner class TopBarInstanceStateSaver(registry: SavedStateRegistry, key: String) :
+        SavedStateRegistry.SavedStateProvider {
+        private val KEY_UDM = "udm"
+        private val KEY_VALUE = "value"
+        private val KEY_TIME = "time"
+
+        init {
+            registry.registerSavedStateProvider(key, this)
+            registry.consumeRestoredStateForKey(key)?.let { bundle ->
+                cursorUdm.text = bundle.getCharSequence(KEY_UDM)
+                cursorValue.text = bundle.getCharSequence(KEY_VALUE)
+                cursorTime.text = bundle.getCharSequence(KEY_TIME)
+            }
+        }
+
+        override fun saveState(): Bundle {
+            val bundle = Bundle()
+            bundle.putCharSequence(KEY_UDM, cursorUdm.text)
+            bundle.putCharSequence(KEY_VALUE, cursorValue.text)
+            bundle.putCharSequence(KEY_TIME, cursorTime.text)
+            return bundle
+        }
+    }
+
     /**
      * Called immediately after onCreateView.
      */
@@ -151,6 +187,11 @@ class ChartFragment : Fragment() {
         cursorValue = cursor.findViewById(R.id.txtValue)
         cursorUdm = cursor.findViewById(R.id.txtUdm)
         cursorStatus = cursor.findViewById(R.id.txtStatus)
+
+        // creo un'oggetto che incapsula il salvataggio di stato della barra superiore.
+        // è un piccolo esempio per provare il meccanismo del SavedStateRegistry
+        // https://developer.android.com/topic/libraries/architecture/saving-states#savedstateregistry
+        TopBarInstanceStateSaver(savedStateRegistry, "topBar")
 
 
         // Imposto un listener custom per le gesture dei grafici.
@@ -248,7 +289,7 @@ class ChartFragment : Fragment() {
             val yHighlight =
                 chart.data.getDataSetByIndex(0).getEntryForXValue(state.xHighlight, 0f).y
             chart.highlightValue(state.xHighlight, 0)
-            viewHighlightValue(state.xHighlight, yHighlight, chart.yUdm)
+//            viewHighlightValue(state.xHighlight, yHighlight, chart.yUdm)
         }
     }
 
