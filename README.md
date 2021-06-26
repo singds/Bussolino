@@ -1,3 +1,7 @@
+Questa applicazione è stata realizzata come progetto finale per il corsi di
+Elementi di Programmazione di sistemi Embedded dell'Università di Padova, anno
+2020/21. Il corso è stato tenuto dal prof. Fantozzi Carlo.
+
 L'applicazione è costituita principalmente da due Fragment e un Service.  
 
 HomeFragment visualizza i dati realtime di accelerometro e magnetometro.  
