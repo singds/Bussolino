@@ -1,6 +1,7 @@
 package com.example.android.bussolaaccelerometro
 
 import android.app.Application
+import android.util.Log
 
 /**
  * [MyApplication] estende Application e funge da contenitore per le risorse condivise da tutte le
@@ -17,9 +18,19 @@ class MyApplication : Application() {
     override fun onCreate() {
         super.onCreate()
 
+        Log.d(
+            LOG_TAG,
+            "onCreate [pid = ${android.os.Process.myPid()}] [tid = ${android.os.Process.myTid()}]"
+        )
+
         // Alla creazione del processo creo un'istanza del repository che sarà condiviso da tutte
         // le componenti dell'app (Service e Activity).
         // Simile al pattern Singleton.
         pRepository = Repository(this)
+    }
+
+    companion object
+    {
+        const val LOG_TAG = "MyApplication"
     }
 }

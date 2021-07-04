@@ -6,6 +6,7 @@ import android.content.Context
 import android.content.Intent
 import android.os.Build
 import android.os.Bundle
+import android.util.Log
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.ViewModelProvider
 import com.example.android.bussolaaccelerometro.MyApplication
@@ -77,6 +78,12 @@ class MainActivity : AppCompatActivity()
         }
     }
 
+    override fun onDestroy() {
+        super.onDestroy()
+
+        Log.d(LOG_TAG, "onDestroy")
+    }
+
     /**
      * Nelle api 26+ le applicazioni che vogliono mostrare notifiche devono prima creare un
      * notification channel.
@@ -120,5 +127,7 @@ class MainActivity : AppCompatActivity()
          * Notification id: id della notifica di app running in background.
          */
         const val ID_NOTIF_READING = 1
+
+        const val LOG_TAG = "MyMainActivity"
     }
 }

@@ -90,7 +90,10 @@ class ReaderService : Service(),
      */
     override fun onCreate() {
         super.onCreate()
-        Log.d(LOG_TAG, "on create")
+        Log.d(
+            LOG_TAG,
+            "onCreate [pid = ${android.os.Process.myPid()}] [tid = ${android.os.Process.myTid()}]"
+        )
 
         repo = (application as MyApplication).repository
 
@@ -207,7 +210,7 @@ class ReaderService : Service(),
      */
     override fun onDestroy() {
         super.onDestroy()
-        Log.d(LOG_TAG, "on destroy")
+        Log.d(LOG_TAG, "onDestroy")
 
         handler.removeCallbacks(sampleTickRunnable)
         sensorManager.unregisterListener(this)
@@ -228,7 +231,7 @@ class ReaderService : Service(),
      */
     override fun onTaskRemoved(rootIntent: Intent?) {
         super.onTaskRemoved(rootIntent)
-        Log.d(LOG_TAG, "on task removed")
+        Log.d(LOG_TAG, "onTaskRemoved")
 
         stopSelf()
     }
